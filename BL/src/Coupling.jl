@@ -346,6 +346,16 @@ function psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_b
 
     psi = 0.0
 
+    #########
+
+    # We also have M = B * Diag
+    # Then A = (I-M)\B # about one second ? Is ok?
+
+    # Ex:
+    # B = Symmetric(randn(n, n))         # symmetric matrix
+    # D = Diagonal(randn(n))             # diagonal matrix    
+
+
 
     return psi 
 end
