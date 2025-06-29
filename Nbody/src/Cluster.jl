@@ -21,6 +21,21 @@ function _F(E::Float64)
 end
 
 ######################################################
+# Data structure
+######################################################
+
+
+mutable struct Cluster
+    tabindex::Vector{Int64} # Particle index
+    tabx::Vector{Float64} # Position
+    tabv::Vector{Float64} # Velocity
+    tabm::Vector{Float64} # Mass 
+    tabf::Vector{Float64} # Force
+    tabt::Vector{Float64} # Time of last update (initialization, collision or final time)
+end
+
+
+######################################################
 # Generate sampling
 ######################################################
 
@@ -46,18 +61,25 @@ end
 
 # tabstars : (index, x, v, mass, force)
 # Initialize at 0
-function initialize_tabstars!(tabstars::Array, vmax::Float64=50.0) 
+function initialize_cluster(vmax::Float64=50.0) 
+
+    cluster = Cluster(zeros(Int64, N),
+                    zeros(Float64, N),
+                    zeros(Float64, N),
+                    zeros(Float64, N),
+                    zeros(Float64, N),
+                    zeros(Float64, N))
 
     # Generate positions
     # Fills indices, positions and time
     for i=1:N 
         u = rand()
         x = _invCDF(u)
-        tabstars[i, 2] = x
-        tabstars[i, 6] = 0.0
+        cluster.tabx[i] = x
+        cluster.tabt[i] = 0.0
     end
 
-    tabstars[:, 2] = sort(tabstars[:, 2])
+    cluster.tabx = sort(cluster.tabx)
 
     mass_left = 0.0
     mass_right = M
@@ -66,14 +88,14 @@ function initialize_tabstars!(tabstars::Array, vmax::Float64=50.0)
     for i=1:N 
         m = M/N 
 
-        tabstars[i, 1] = i
-        tabstars[i, 4] = m 
+        cluster.tabindex[i] = i
+        cluster.tabm[i] = m 
 
         mass_right -= m
         force = G*(mass_right - mass_left)
         mass_left += m
 
-        tabstars[i, 5] = force
+        cluster.tabf[i] = force
 
     end
 
@@ -87,7 +109,7 @@ function initialize_tabstars!(tabstars::Array, vmax::Float64=50.0)
    
     # Fills velocities
     for i=1:N
-        x = tabstars[i, 2]
+        x = cluster.tabx[i]
 
         while (true)
             v = vmax * (2*rand()-1)
@@ -96,7 +118,7 @@ function initialize_tabstars!(tabstars::Array, vmax::Float64=50.0)
             F = _F(E)
 
             if (u <= F/maxF)
-                tabstars[i, 3] = v
+                cluster.tabv[i] = v
                 break 
             end
         end
@@ -104,7 +126,7 @@ function initialize_tabstars!(tabstars::Array, vmax::Float64=50.0)
 
     # Recenter positions and velocities ?
 
-    return nothing 
+    return cluster
 
 end
 

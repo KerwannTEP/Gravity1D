@@ -1,19 +1,19 @@
 # Compute the collision time of particles i and i+1
 # j = i+1
 # tabstars contains : # (index, x, v, mass, force, time)
-function compute_collision_time_i(i::Int64, tabstars)
+function compute_collision_time_i(i::Int64, cluster::Cluster)
 
     # Star i 
-    ti0 = tabstars[i, 6]
-    xi0 = tabstars[i, 2]
-    vi0 = tabstars[i, 3]
-    fi0 = tabstars[i, 5]
+    ti0 = cluster.tabt[i]
+    xi0 = cluster.tabx[i]
+    vi0 = cluster.tabv[i]
+    fi0 = cluster.tabf[i]
 
     # Star j=i+1
-    tj0 = tabstars[i+1, 6]
-    xj0 = tabstars[i+1, 2]
-    vj0 = tabstars[i+1, 3]
-    fj0 = tabstars[i+1, 5]
+    tj0 = cluster.tabt[i+1]
+    xj0 = cluster.tabx[i+1]
+    vj0 = cluster.tabv[i+1]
+    fj0 = cluster.tabf[i+1]
 
     t = ti0
 
@@ -35,9 +35,9 @@ function compute_collision_time_i(i::Int64, tabstars)
     # x_i(t_c) = x_j(t_c)
     # (x_i0-x_j0) + (v_i0-v_j0)*dt + 0.5*(f_i-f_j)*dt^2 = 0
 
-    a = 0.5*(tabstars[i,5] - tabstars[i+1,5])
-    b = tabstars[i,3] - tabstars[i+1,3]
-    c = tabstars[i,2] - tabstars[i+1,2]
+    a = 0.5*(fi0 - fj0)
+    b = vi0 - vj0
+    c = xi0 - xj0
     discSq = b^2 - 4*a*c
     if (discSq >= 0)
         q = -0.5 * (b + sign(b) * sqrt(b^2 - 4*a*c)) # Numerically stable formula

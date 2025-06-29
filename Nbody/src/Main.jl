@@ -1,7 +1,7 @@
 include("Args.jl")
 include("Cluster.jl")
 include("Heap.jl")
-include("CollisionTimes.jl")
+include("CollisionTime.jl")
 include("SaveData.jl")
 
 using Random
@@ -13,28 +13,30 @@ using Random
 
 function main()
 
-    Random.seed!(seed)
+    println("Initialization...")
 
-    tabstars = zeros(Float64, N, 6) # (index, x, v, mass, force, time): time is that of last update (initialization, collision or final time)
-    initialize_tabstars!(tabstars)
+    Random.seed!(seed)
+    cluster = initialize_cluster()
     time = 0.0
 
-
     # Save initial state
-    # TODO
+    save_data(0.0, cluster)
 
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
     for i=1:N-1
-        tc = compute_collision_time_i(i, tabstars)
+        tc = compute_collision_time_i(i, cluster)
         push!(heap, tc, i)
     end
 
-
+    println("Relaxation...")
+    index_collision = 0
     # Main loop
     while (time < tmax)
         tc, i = find_next_collision(heap)
+
+        println("Current time : ", time, "/", tmax)
 
         if (tc < tmax) # If the next collision occurs before tmax
 
@@ -44,19 +46,19 @@ function main()
             # x_i(t_c) = x_i0 + v_i0 * dt + 0.5*f_i * dt^2
             # x_j(t_c) = x_j0 + v_j0 * dt + 0.5*f_j * dt^2
 
-            ti0 = tabstars[i, 6]
-            xi0 = tabstars[i, 2]
-            vi0 = tabstars[i, 3]
-            fi0 = tabstars[i, 5]
-            mi0 = tabstars[i, 4]
-            indexi0 = tabstars[i,1]
+            ti0 = cluster.tabt[i]
+            xi0 = cluster.tabx[i]
+            vi0 = cluster.tabv[i]
+            fi0 = cluster.tabf[i]
+            mi0 = cluster.tabm[i]
+            indexi0 = cluster.tabindex[i]
 
-            tj0 = tabstars[i+1, 6]
-            xj0 = tabstars[i+1, 2]
-            vj0 = tabstars[i+1, 3]
-            fj0 = tabstars[i+1, 5]
-            mj0 = tabstars[i+1, 4]
-            indexj0 = tabstars[i+1,1]
+            tj0 = cluster.tabt[i+1]
+            xj0 = cluster.tabx[i+1]
+            vj0 = cluster.tabv[i+1]
+            fj0 = cluster.tabf[i+1]
+            mj0 = cluster.tabm[i+1]
+            indexj0 = cluster.tabindex[i+1]
 
             xc = xi0 + vi0*(tc-ti0) + 0.5*fi0*(tc-ti0)^2
 
@@ -64,50 +66,58 @@ function main()
             vj = vj0 + fj0 * (tc-tj0)
 
             # Swap particles
-            tabstars[i,1] = indexj0
-            tabstars[i+1,1] = indexi0
+            cluster.tabindex[i] = indexj0
+            cluster.tabindex[i+1] = indexi0
 
-            tabstars[i,2] = xc
-            tabstars[i+1,2] = xc
+            cluster.tabx[i] = xc
+            cluster.tabx[i+1] = xc
 
-            tabstars[i,3] = vj
-            tabstars[i+1,3] = vi
+            cluster.tabv[i] = vj
+            cluster.tabv[i+1] = vi
 
-            tabstars[i,4] = mj0
-            tabstars[i+1,4] = mi0
+            cluster.tabm[i] = mj0
+            cluster.tabm[i+1] = mi0
 
-            tabstars[i,5] += mi0 - mj0
-            tabstars[i+1,5] += mi0 - mj0
+            cluster.tabf[i] += mi0 - mj0
+            cluster.tabf[i+1] += mi0 - mj0
 
-            tabstars[i,6] = tc
-            tabstars[i+1,6] = tc
+            cluster.tabt[i] = tc
+            cluster.tabt[i+1] = tc
 
             time = tc
+            index_collision += 1
 
             # Compute new collision time between i and i+1
-            tc = compute_collision_time_i(i, tabstars)
+            tc = compute_collision_time_i(i, cluster)
             replace!(heap, 1, tc)
 
             if (i > 1)
                 # Compute new collision time between i-1 and i
-                tc = compute_collision_time_i(i-1, tabstars)
+                tc = compute_collision_time_i(i-1, cluster)
                 index_heap = heap.index_PH[i-1]
                 replace!(heap, index_heap, tc)
             end
 
             if (i < N-1)
                 # Compute new collision time between i+1 and i+2
-                tc = compute_collision_time_i(i+1, tabstars)
+                tc = compute_collision_time_i(i+1, cluster)
                 index_heap = heap.index_PH[i+1]
                 replace!(heap, index_heap, tc)
             end
 
+            # Save intermediate data
+            if ((coll_per_save > 0) && (index_collision >= coll_per_save))
 
-            # Save every k collisions ? (With k=0 corresponding to no intermediate saves)
-            # TODO
+                # Temporarily evolution each particles to current time
+                # This section is also the slow block of the loop, so it should not be used too frequently (i.e. k should be large)
+                save_intermediate_data(time, tabstars)
+
+                # Reset the collision index
+                index_collision = 0
+            end
 
 
-        else # If the the next collision occurs after tmax
+        else # If the next collision occurs after tmax
 
             break
 
@@ -115,24 +125,25 @@ function main()
 
     end
 
+    println("Finalization...")
 
     # Evolve the particles to final time, given by time
     # No other collisions until time by construction
     # Only positions and velocities evolve
 
     for i=1:N
-        ti0 = tabstars[i, 6]
-        xi0 = tabstars[i, 2]
-        vi0 = tabstars[i, 3]
-        fi0 = tabstars[i, 5]
+        ti0 = cluster.tabt[i]
+        xi0 = cluster.tabx[i]
+        vi0 = cluster.tabv[i]
+        fi0 = cluster.tabf[i]
 
-        tabstars[i, 2] = xi0 + vi0*(time-ti0) + 0.5*fi0*(time-ti0)^2
-        tabstars[i, 3] = vi0 + fi0 * (time-ti0)
-        tabstars[i, 6] = time
+        cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
+        cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)
+        cluster.tabt[i] = tmax
     end
 
     # Save the final state
-    # TODO
+    save_data(tmax, cluster)
 
 
     # In post-processing: 
@@ -143,6 +154,9 @@ function main()
     # It evolves linearly between each nodes 
     # Save the values of psi(x) at each nodes and then interpolate linearly 
 
+    return nothing
 
 end
+
+main()
 

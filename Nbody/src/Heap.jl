@@ -1,4 +1,4 @@
-struct MinHeap
+mutable struct MinHeap
     data::Vector{Float64} # Data
     index_HP::Vector{Int64} # Particle index at for each heap index
     index_PH::Vector{Int64} # Heap index at for each particle index
@@ -26,6 +26,7 @@ end
 # Swap two elements
 function swap!(v::Vector, i::Int64, j::Int64)
     v[i], v[j] = v[j], v[i]
+    return nothing
 end
 
 # Bubble up to restore heap after insert
@@ -42,6 +43,7 @@ function bubble_up!(heap::MinHeap, i::Int64)
 
         i = parent(i)
     end
+    return nothing
 end
 
 # Bubble down to restore heap after removal
@@ -49,17 +51,18 @@ function bubble_down!(heap::MinHeap, i::Int)
     n = length(heap.data)
     current = i
     while true
-        l = left(i)
-        r = right(i)
+        l = left(current)
+        r = right(current)
         smallest = current
 
-        if l <= n && heap.data[l] < heap.data[smallest]
+        if ((l <= n) && (heap.data[l] < heap.data[smallest]))
             smallest = l
         end
-        if r <= n && heap.data[r] < heap.data[smallest]
+        if ((r <= n) && (heap.data[r] < heap.data[smallest]))
             smallest = r
         end
-        if smallest == current
+
+        if (smallest == current) # Parent is smaller than children
             break
         end
 
@@ -74,6 +77,7 @@ function bubble_down!(heap::MinHeap, i::Int)
 
         current = smallest
     end
+    return nothing
 end
 
 # Insert a new value
@@ -82,6 +86,7 @@ function push!(heap::MinHeap, val::Float64, index::Int64)
     Base.push!(heap.index_HP, index)
     Base.push!(heap.index_PH, index)
     bubble_up!(heap, index)
+    return nothing
 end
 
 # Peek at the minimum value
@@ -118,6 +123,7 @@ function replace!(heap::MinHeap, i::Int, new_val::Float64)
     elseif new_val > old_val
         bubble_down!(heap, i)
     end
+    return nothing
 end
 
 # Check if heap is empty
