@@ -5,6 +5,7 @@ include("CollisionTime.jl")
 include("SaveData.jl")
 
 using Random
+using Dates
 
 # Algorithm inspired by Noullez, Fanelli & Aurell (2003)
 # A heap-based algorithm for the study of one-dimensional particle systems
@@ -18,10 +19,10 @@ function main()
     Random.seed!(seed)
     cluster = initialize_cluster()
     time = 0.0
+    nbcoll = 0
 
     # Save initial state
     save_data(0.0, cluster)
-
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
@@ -30,13 +31,15 @@ function main()
         push!(heap, tc, i)
     end
 
+    println("-----------------------")
+
     println("Relaxation...")
-    index_collision = 0
+    timing_start = now()
+
     # Main loop
+    time_since_last_tdyn = 0.0
     while (time < tmax)
         tc, i = find_next_collision(heap)
-
-        println("Current time : ", time, "/", tmax)
 
         if (tc < tmax) # If the next collision occurs before tmax
 
@@ -84,8 +87,10 @@ function main()
             cluster.tabt[i] = tc
             cluster.tabt[i+1] = tc
 
+            dt = tc - time
             time = tc
-            index_collision += 1
+            time_since_last_tdyn += dt
+            nbcoll += 1
 
             # Compute new collision time between i and i+1
             tc = compute_collision_time_i(i, cluster)
@@ -106,15 +111,19 @@ function main()
             end
 
             # Save intermediate data
-            if ((coll_per_save > 0) && (index_collision >= coll_per_save))
+            if ((tdyn_per_save > 0) && (time_since_last_tdyn >= tdyn_per_save * tdyn))
 
                 # Temporarily evolution each particles to current time
                 # This section is also the slow block of the loop, so it should not be used too frequently (i.e. k should be large)
-                save_intermediate_data(time, tabstars)
+                # Total complexity of the run is O(N^2 log N)
+                # Each save has complexity O(N)
+                # Saving each tdyn yields a total additional complexity of O(N^2) until trelax=N tdyn, which is smaller than O(N^2 log N)
+                save_intermediate_data(time, cluster)
 
                 # Reset the collision index
-                index_collision = 0
+                time_since_last_tdyn = time_since_last_tdyn % (tdyn_per_save * tdyn)
             end
+            
 
 
         else # If the next collision occurs after tmax
@@ -142,8 +151,20 @@ function main()
         cluster.tabt[i] = tmax
     end
 
+    timing_end = now()
+
     # Save the final state
     save_data(tmax, cluster)
+
+    # https://stackoverflow.com/questions/41293747/round-julias-millisecond-type-to-nearest-second-or-minute
+    dtim = timing_end - timing_start
+
+    println("-----------------------")
+
+    # https://discourse.julialang.org/t/how-to-convert-period-in-milisecond-to-minutes-seconds-hour-etc/2423/6
+    dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
+    println("Simulation took      : ", dt_v)
+    println("Number of collisions : ", nbcoll)
 
 
     # In post-processing: 

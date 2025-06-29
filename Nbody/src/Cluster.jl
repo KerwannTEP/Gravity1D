@@ -22,6 +22,7 @@ end
 
 ######################################################
 # Data structure
+# Such that its component are ordered by increasing positions x
 ######################################################
 
 
@@ -30,8 +31,8 @@ mutable struct Cluster
     tabx::Vector{Float64} # Position
     tabv::Vector{Float64} # Velocity
     tabm::Vector{Float64} # Mass 
-    tabf::Vector{Float64} # Force
-    tabt::Vector{Float64} # Time of last update (initialization, collision or final time)
+    tabf::Vector{Float64} # Force (per unit mass, i.e. the specific force)
+    tabt::Vector{Float64} # Time of last update (initialization, last collision or final time)
 end
 
 
@@ -61,7 +62,7 @@ end
 
 # tabstars : (index, x, v, mass, force)
 # Initialize at 0
-function initialize_cluster(vmax::Float64=50.0) 
+function initialize_cluster(vmax::Float64=100.0) 
 
     cluster = Cluster(zeros(Int64, N),
                     zeros(Float64, N),
@@ -72,7 +73,10 @@ function initialize_cluster(vmax::Float64=50.0)
 
     # Generate positions
     # Fills indices, positions and time
+
+    println("Generating positions...")
     for i=1:N 
+        println("Progress : ", i, "/", N)
         u = rand()
         x = _invCDF(u)
         cluster.tabx[i] = x
@@ -107,9 +111,12 @@ function initialize_cluster(vmax::Float64=50.0)
 
     maxF = _F(_psi(0.0)) # Single mass
    
+    println("Generating velocities...")
+
     # Fills velocities
     for i=1:N
         x = cluster.tabx[i]
+        println("Progress : ", i, "/", N)
 
         while (true)
             v = vmax * (2*rand()-1)

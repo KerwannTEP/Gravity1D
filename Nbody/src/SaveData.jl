@@ -1,11 +1,14 @@
 using DelimitedFiles
 
+# TODO : Folder of the seed
+# Use binary files instead ?
+
 function save_intermediate_data(time::Float64, cluster::Cluster)
 
     data = zeros(Float64, N, 5)
 
     # Temporarily evolve each particle to current time
-    Threads.@threads for i=1:N
+    for i=1:N
         ti0 = cluster.tabt[i]
         xi0 = cluster.tabx[i]
         vi0 = cluster.tabv[i]
@@ -17,7 +20,7 @@ function save_intermediate_data(time::Float64, cluster::Cluster)
         data[i, 1] = cluster.tabindex[i]
         data[i, 2] = x 
         data[i, 3] = v 
-        data[i, 4] = cluster.tabm[i, 4]
+        data[i, 4] = cluster.tabm[i]
         data[i, 5] = fi0
     end
 

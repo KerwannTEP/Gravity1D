@@ -8,7 +8,7 @@ const src_dir = @__DIR__
 tabargs = ArgParseSettings()
 @add_arg_table! tabargs begin
     "--p"
-    help = "Power p of the number of particles, N=2^p. Default: 7."
+    help = "Power p of the number of particles, N=2^p. Default: 7"
     arg_type = Int64
     default = 7
     "--tmax"
@@ -16,25 +16,25 @@ tabargs = ArgParseSettings()
     arg_type = Float64
     default = 1.0
     "--save_freq"
-    help = "Frequency of the save, given in number of collisions between save (set to 0 to turn of this option). Default: 0"
+    help = "Frequency of the save, given in number of dynamical times between save (set to 0 to turn of this option). Default: 0"
     arg_type = Int64
     default = 0
 
     "--G"
-    help = "Newton's constant. Default: 1."
+    help = "Newton's constant. Default: 1.0"
     arg_type = Float64
     default = 1.0
     "--M"
-    help = "Total mass of the cluster. Default: 1."
+    help = "Total mass of the cluster. Default: 1.0"
     arg_type = Float64
     default = 1.0
     "--L"
-    help = "Characteristic size of the cluster. Default: 1."
+    help = "Characteristic size of the cluster. Default: 1.0"
     arg_type = Float64
     default = 1.0
    
     "--seed"
-    help = "Seed of the random number generator. Default: 0."
+    help = "Seed of the random number generator. Default: 0"
     arg_type = Int64
     default = 0
     "--output_file"
@@ -46,7 +46,7 @@ parsed_args = parse_args(tabargs)
 
 const p = parsed_args["p"]
 const tmax = parsed_args["tmax"]
-const coll_per_save = parsed_args["save_freq"]
+const tdyn_per_save = parsed_args["save_freq"]
 
 const G = parsed_args["G"]
 const M = parsed_args["M"]
@@ -57,3 +57,5 @@ const output_file = parsed_args["output_file"]
 
 const N = 2^p
 const alpha = 2*L/pi
+
+const tdyn = 1.0/N * sqrt(L*M/G)
