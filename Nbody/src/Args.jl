@@ -12,7 +12,7 @@ tabargs = ArgParseSettings()
     arg_type = Int64
     default = 7
     "--tmax"
-    help = "Final time of the simulation. Default: 1.0"
+    help = "Final time of the simulation, in units of dynamical times. Default: 1.0"
     arg_type = Float64
     default = 1.0
     "--save_freq"
@@ -45,7 +45,6 @@ end
 parsed_args = parse_args(tabargs)
 
 const p = parsed_args["p"]
-const tmax = parsed_args["tmax"]
 const tdyn_per_save = parsed_args["save_freq"]
 
 const G = parsed_args["G"]
@@ -58,4 +57,5 @@ const output_file = parsed_args["output_file"]
 const N = 2^p
 const alpha = 2*L/pi
 
-const tdyn = 1.0/N * sqrt(L*M/G)
+const tdyn = sqrt(L*M/G)
+const tmax = parsed_args["tmax"] * tdyn
