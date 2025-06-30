@@ -16,7 +16,7 @@ tabargs = ArgParseSettings()
     arg_type = Float64
     default = 1.0
     "--save_freq"
-    help = "Frequency of the save, given in number of dynamical times between save (set to 0 to turn of this option). Default: 1"
+    help = "Frequency of the save, given in number of dynamical times between save (set to 0 to turn this option off). Default: 1"
     arg_type = Int64
     default = 1
 

@@ -60,8 +60,43 @@ function _invCDF(y::Float64) # y in [0, 1]
 
 end
 
-# tabstars : (index, x, v, mass, force)
-# Initialize at 0
+function _CDFv(v::Float64, x::Float64)
+    psi = _psi(x)
+    rho = _rho(x)
+    t = v/sqrt(2*psi)
+
+    fct = (15*t+20*t^3+8*t^5+8*(1+t^2)^(5/2))/(15*(1+t^2)^(5/2))
+
+    return 15*G^3*M^4*alpha^2/(32*rho*psi^3) * fct
+
+end
+
+function _invCDFv(z::Float64, x::Float64)
+    
+    if (z < 1/2) # then v<0
+        vr = 0.0
+        vl = -1.0
+        while (_CDFv(vl, x)> z)
+            vl *= 2.0
+        end
+
+        return bisection(v->_CDFv(v, x)-z, vl, vr)
+    elseif (z == 1/2)
+        return 0.0
+    else # then v>0
+        vl = 0.0
+        vr = 1.0
+        while (_CDFv(vr, x)< z)
+            vr *= 2.0
+        end
+
+        return bisection(v->_CDFv(v, x)-z, vl, vr)
+
+    end
+
+end
+
+# Initialize a Plummer cluster
 function initialize_cluster(vmax::Float64=100.0) 
 
     cluster = Cluster(zeros(Int64, N),
@@ -103,32 +138,16 @@ function initialize_cluster(vmax::Float64=100.0)
 
     end
 
-    # Generate velocities
-    # Use Accept-Reject Method
-    # https://jblevins.org/notes/accept-reject
-    # F(v|x) = F(x,v)/rho(x) = C_x F(E)
-    # E = psi(x) + v^2/2
-
-    maxF = _F(_psi(0.0)) # Single mass
-   
     println("Generating velocities...")
 
     # Fills velocities
     for i=1:N
         x = cluster.tabx[i]
         println("Progress : ", i, "/", N)
+        z = rand()
+        v = _invCDFv(z, x)
+        cluster.tabv[i] = v
 
-        while (true)
-            v = vmax * (2*rand()-1)
-            u = rand()
-            E = _psi(x) + v^2/2
-            F = _F(E)
-
-            if (u <= F/maxF)
-                cluster.tabv[i] = v
-                break 
-            end
-        end
     end
 
     # Recenter positions and velocities ?
@@ -138,3 +157,54 @@ function initialize_cluster(vmax::Float64=100.0)
 end
 
 
+######################################################
+# Tools
+######################################################
+
+
+function bisection(fun::Function, xl::Float64, xu::Float64, tolx::Float64=1.0*10^(-10), tolf::Float64=1.0*10^(-10), iterMAX::Int64=200)
+    if (xl > xu)
+        xl, xu = xu, xl # Ordering the input arguments
+    end
+    #####
+    fl, fu = fun(xl), fun(xu) # Evaluating the function on the bracket
+    #####
+
+    if (abs(fl) <= tolf) # We have already found a solution on the left bracket
+        return xl # Returning the left bracket
+    end
+    #####
+    if (abs(fu) <= tolf) # We have already found a solution on the right bracket
+        return xu # Returning the right bracket
+    end
+
+    #####
+    @assert fl*fu < 0.0 "bisection: NOT A BRACKET : (xl,xu,fl,fu) = "*string((xl,xu,fl,fu))
+    #####
+    iter = 0 # Counter for the iterations
+    #####
+    while true # Bisection loop
+        #####
+        xm = (xl+xu)*0.5 # Middle value
+        #####
+        if ((abs(xu-xl) <= tolx) || (iter > iterMAX)) # The considered bracket is smaller than the tolerance, or we have made too many iterations
+            return xm # Returning the middle value
+        end
+        #####
+        fm = fun(xm) # Value at the midpoint
+        #####
+        iter += 1 # Updating the counter of iterations
+        #####
+        if (abs(fm) <= tolf) # The middle value is below the threshold
+            return xm # Returning the middle value
+        end
+        #####
+        # Otherwise, we iterate the bisection
+        if (fm*fl < 0.0) # One root can be found between the left point and the middle point
+            xu, fu = xm, fm # The upper point becomes the midpoint
+        else
+            xl, fl = xm, fm # The lower point becomes the midpoint
+        end
+    end
+    
+end
