@@ -16,9 +16,9 @@ tabargs = ArgParseSettings()
     arg_type = Float64
     default = 1.0
     "--save_freq"
-    help = "Frequency of the save, given in number of dynamical times between save (set to 0 to turn of this option). Default: 0"
+    help = "Frequency of the save, given in number of dynamical times between save (set to 0 to turn of this option). Default: 1"
     arg_type = Int64
-    default = 0
+    default = 1
 
     "--G"
     help = "Newton's constant. Default: 1.0"
@@ -37,10 +37,10 @@ tabargs = ArgParseSettings()
     help = "Seed of the random number generator. Default: 0"
     arg_type = Int64
     default = 0
-    "--output_file"
-    help = "Name/Location of the output file. Default: 'path/to/Nbody/data/output.txt'."
+    "--output"
+    help = "Name of the output file. Default: 'output'"
     arg_type = String
-    default = src_dir * "/../data/output.txt"
+    default = "output"
 end
 parsed_args = parse_args(tabargs)
 
@@ -52,7 +52,7 @@ const M = parsed_args["M"]
 const L = parsed_args["L"]
 
 const seed = parsed_args["seed"]
-const output_file = parsed_args["output_file"]
+const output_name = parsed_args["output"]
 
 const N = 2^p
 const alpha = 2*L/pi

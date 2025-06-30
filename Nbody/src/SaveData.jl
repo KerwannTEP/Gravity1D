@@ -23,10 +23,9 @@ function save_intermediate_data(time::Float64, cluster::Cluster)
         data[i, 4] = cluster.tabm[i]
         data[i, 5] = fi0
     end
-
    
     # Save data as "output_t_time.txt"
-    namefile = output_file * "_t_"*string(time)*".txt"
+    namefile = src_dir * "/../data/seed_" * string(seed) * "/" * output_name * "_t_"*string(time)*".txt"
     writedlm(namefile, data)
 
     return nothing
@@ -36,7 +35,7 @@ end
 function save_data(time::Float64, cluster::Cluster)
 
     # Save tabstars as "output_t_time.txt"
-    namefile = output_file * "_t_"*string(time)*".txt"
+    namefile = src_dir * "/../data/seed_" * string(seed) * "/" * output_name * "_t_"*string(time)*".txt"
     writedlm(namefile, [cluster.tabindex cluster.tabx cluster.tabv cluster.tabm cluster.tabf])
 
     return nothing

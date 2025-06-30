@@ -16,6 +16,8 @@ function main()
 
     println("Initialization...")
 
+    mkpath(src_dir * "/../data/seed_" * string(seed))
+
     Random.seed!(seed)
     cluster = initialize_cluster()
     time = 0.0
@@ -165,15 +167,6 @@ function main()
     dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
     println("Simulation took      : ", dt_v)
     println("Number of collisions : ", nbcoll)
-
-
-    # In post-processing: 
-    # Should compute Delta J for each particle
-    # Evolving potential psi(x)
-    # We know f(x) = -psi'(x), which is constant between nodes
-    # We can infer psi(x) trivially by integration
-    # It evolves linearly between each nodes 
-    # Save the values of psi(x) at each nodes and then interpolate linearly 
 
     return nothing
 
