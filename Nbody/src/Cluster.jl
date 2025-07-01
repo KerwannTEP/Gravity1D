@@ -31,7 +31,7 @@ mutable struct Cluster
     tabx::Vector{Float64} # Position
     tabv::Vector{Float64} # Velocity
     tabm::Vector{Rational{Int64}} # Mass (in fraction of m_avg)
-    tabf::Vector{Float64} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
+    tabf::Vector{Rational{Int64}} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
     tabt::Vector{Float64} # Time of last update (initialization, last collision or final time)
 end
 
@@ -103,7 +103,7 @@ function initialize_cluster(vmax::Float64=100.0)
                     zeros(Float64, N),
                     zeros(Float64, N),
                     zeros(Rational{Int64}, N),
-                    zeros(Float64, N),
+                    zeros(Rational{Int64}, N),
                     zeros(Float64, N))
 
     # Generate positions
