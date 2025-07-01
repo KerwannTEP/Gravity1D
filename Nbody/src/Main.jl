@@ -54,14 +54,14 @@ function main()
             ti0 = cluster.tabt[i]
             xi0 = cluster.tabx[i]
             vi0 = cluster.tabv[i]
-            fi0 = cluster.tabf[i]
+            fi0 = cluster.tabf[i] * G * m_avg # Convert forces back to standard units
             mi0 = cluster.tabm[i]
             indexi0 = cluster.tabindex[i]
 
             tj0 = cluster.tabt[i+1]
             xj0 = cluster.tabx[i+1]
             vj0 = cluster.tabv[i+1]
-            fj0 = cluster.tabf[i+1]
+            fj0 = cluster.tabf[i+1] * G * m_avg # Convert forces back to standard units
             mj0 = cluster.tabm[i+1]
             indexj0 = cluster.tabindex[i+1]
 
@@ -83,6 +83,7 @@ function main()
             cluster.tabm[i] = mj0
             cluster.tabm[i+1] = mi0
 
+            # Use rationals here to avoid roundoff errors
             cluster.tabf[i] += mi0 - mj0
             cluster.tabf[i+1] += mi0 - mj0
 
@@ -146,7 +147,7 @@ function main()
         ti0 = cluster.tabt[i]
         xi0 = cluster.tabx[i]
         vi0 = cluster.tabv[i]
-        fi0 = cluster.tabf[i]
+        fi0 = cluster.tabf[i] * G * m_avg # Convert forces back to standard units
 
         cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
         cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)

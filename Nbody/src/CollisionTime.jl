@@ -7,13 +7,13 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
     ti0 = cluster.tabt[i]
     xi0 = cluster.tabx[i]
     vi0 = cluster.tabv[i]
-    fi0 = cluster.tabf[i]
+    fi0 = cluster.tabf[i] * G * m_avg # Convert forces back to standard units
 
     # Star j=i+1
     tj0 = cluster.tabt[i+1]
     xj0 = cluster.tabx[i+1]
     vj0 = cluster.tabv[i+1]
-    fj0 = cluster.tabf[i+1]
+    fj0 = cluster.tabf[i+1] * G * m_avg # Convert forces back to standard units
 
     t = ti0
 

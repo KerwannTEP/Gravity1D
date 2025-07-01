@@ -59,3 +59,5 @@ const alpha = 2*L/pi
 
 const tdyn = sqrt(L*M/G)
 const tmax = parsed_args["tmax"] * tdyn
+
+const m_avg = M/N # Average mass. For single-mass cluster, each star has mass m_avg * 1/1
