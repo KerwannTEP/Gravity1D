@@ -7,7 +7,8 @@ using Statistics
 
 function plot_data()
 
-    index = div(8192,2)
+    # index = div(8192,2)
+    index = 1 
 
     listdata = glob("../data/seed_0/output_t_*.txt")
     nbt = length(listdata)

@@ -68,9 +68,13 @@ function main()
             dti = tc - ti0
             dtj = tc - tj0
 
-            xc = xi0 + dti * (vi0 + 0.5 * fi0 * dti)
-            vi = vi0 + fi0 * dti
-            vj = vj0 + fj0 * dtj
+            # xc = xi0 + dti * (vi0 + 0.5 * fi0 * dti)
+            # vi = vi0 + fi0 * dti
+            # vj = vj0 + fj0 * dtj
+
+            xc = muladd(dti, muladd(0.5 * fi0, dti, vi0), xi0)
+            vi = muladd(fi0, dti, vi0)
+            vj = muladd(fj0, dtj, vj0)
 
             # Swap particles
             cluster.tabindex[i] = indexj0
@@ -151,8 +155,11 @@ function main()
         vi0 = cluster.tabv[i]
         fi0 = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
 
-        cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
-        cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)
+        # cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
+        # cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)
+        dt = tmax-ti0
+        cluster.tabx[i] = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        cluster.tabv[i] = muladd(fi0, dt, vi0)
         cluster.tabt[i] = tmax
     end
 

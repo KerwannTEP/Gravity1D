@@ -19,8 +19,11 @@ function save_intermediate_data(time::Float64, cluster::Cluster)
         # x = xi0 + vi0*(time-ti0) + 0.5*fi0*(time-ti0)^2
         # v = vi0 + fi0 * (time-ti0)
 
-        x = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
-        v = vi0 + fi0 * dt
+        # x = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
+        # v = vi0 + fi0 * dt
+
+        x = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        v = muladd(fi0, dt, vi0)
 
         data[i, 1] = cluster.tabindex[i]
         data[i, 2] = x 
