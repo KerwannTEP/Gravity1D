@@ -27,12 +27,14 @@ end
 
 
 mutable struct Cluster
-    tabindex::Vector{Int64} # Particle index
+    tabindex::Vector{Int64} # Particle index (at t=0)
     tabx::Vector{Float64} # Position
     tabv::Vector{Float64} # Velocity
-    tabm::Vector{Rational{Int64}} # Mass (in fraction of m_avg)
-    tabf::Vector{Rational{Int64}} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
-    tabt::Vector{Float64} # Time of last update (initialization, last collision or final time)
+    # tabm::Vector{Rational{Int64}} # Mass (in fraction of m_avg)
+    # tabf::Vector{Rational{Int64}} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
+    tabm::Vector{Float64} # Mass (in fraction of m_avg)
+    tabf::Vector{Float64} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
+   tabt::Vector{Float64} # Time of last update (initialization, last collision or final time)
 end
 
 
@@ -120,19 +122,19 @@ function initialize_cluster(vmax::Float64=100.0)
 
     cluster.tabx = sort(cluster.tabx)
 
-    mass_left = 0 # In fraction of m_avg
-    mass_right = N # In fraction of m_avg
+    mass_left = 0.0 #0 # In fraction of m_avg
+    mass_right = M #N # In fraction of m_avg
 
     # Fills masses and forces
     for i=1:N 
-        m = 1//1 # In fraction of m_avg
+        m = M/N #1//1 # In fraction of m_avg
 
         cluster.tabindex[i] = i
         cluster.tabm[i] = m 
 
         mass_right -= m
-        # force = G*(mass_right - mass_left)
-        force = mass_right - mass_left # In units of G * m_avg
+        force = G*(mass_right - mass_left)
+        # force = mass_right - mass_left # In units of G * m_avg
         mass_left += m
 
         cluster.tabf[i] = force

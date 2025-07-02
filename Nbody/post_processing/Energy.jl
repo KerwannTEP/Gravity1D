@@ -4,9 +4,6 @@ using Plots
 using LaTeXStrings
 using Statistics
 
-# Compute diffusion in E 
-# Use data in data/
-
 const G = 1.0
 const prec = 10^(-16)
 

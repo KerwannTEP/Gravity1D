@@ -4,10 +4,6 @@ using Plots
 using LaTeXStrings
 using Statistics
 
-# Compute diffusion in E 
-# Use data in data/
-
-# Try plotting one particle
 
 function plot_data()
 
