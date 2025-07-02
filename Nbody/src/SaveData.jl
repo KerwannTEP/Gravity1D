@@ -3,9 +3,9 @@ using DelimitedFiles
 # TODO : Folder of the seed
 # Use binary files instead ?
 
-function save_intermediate_data(time::Float64, cluster::Cluster)
+function save_intermediate_data(time::BigFloat, cluster::Cluster)
 
-    data = zeros(Float64, N, 5)
+    data = zeros(BigFloat, N, 5)
 
     # Temporarily evolve each particle to current time
     for i=1:N
@@ -22,7 +22,7 @@ function save_intermediate_data(time::Float64, cluster::Cluster)
         # x = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
         # v = vi0 + fi0 * dt
 
-        x = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        x = muladd(dt, muladd(fi0*BF_half, dt, vi0), xi0)
         v = muladd(fi0, dt, vi0)
 
         data[i, 1] = cluster.tabindex[i]
@@ -40,9 +40,9 @@ function save_intermediate_data(time::Float64, cluster::Cluster)
 
 end
 
-function save_data(time::Float64, cluster::Cluster)
+function save_data(time::BigFloat, cluster::Cluster)
 
-    data = zeros(Float64, N, 5)
+    data = zeros(BigFloat, N, 5)
 
     # Temporarily evolve each particle to current time
     for i=1:N

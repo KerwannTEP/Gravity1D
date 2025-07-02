@@ -1,4 +1,5 @@
 include("Args.jl")
+include("Constants.jl")
 include("Cluster.jl")
 include("Heap.jl")
 include("CollisionTime.jl")
@@ -20,11 +21,11 @@ function main()
 
     Random.seed!(seed)
     cluster = initialize_cluster()
-    time = 0.0
+    time = BF_0
     nbcoll = 0
 
     # Save initial state
-    save_data(0.0, cluster)
+    save_data(time, cluster)
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
@@ -35,11 +36,13 @@ function main()
 
     println("-----------------------")
 
+    println("Length of Float mantissa : ", precision(BigFloat), " bits")
+
     println("Relaxation...")
     timing_start = now()
 
     # Main loop
-    time_since_last_tdyn = 0.0
+    time_since_last_tdyn = BF_0
     while (time < tmax)
         tc, i = find_next_collision(heap)
 
@@ -72,7 +75,7 @@ function main()
             # vi = vi0 + fi0 * dti
             # vj = vj0 + fj0 * dtj
 
-            xc = muladd(dti, muladd(0.5 * fi0, dti, vi0), xi0)
+            xc = muladd(dti, muladd(fi0*BF_half, dti, vi0), xi0)
             vi = muladd(fi0, dti, vi0)
             vj = muladd(fj0, dtj, vj0)
 
@@ -158,7 +161,7 @@ function main()
         # cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
         # cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)
         dt = tmax-ti0
-        cluster.tabx[i] = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        cluster.tabx[i] = muladd(dt, muladd(fi0*BF_half, dt, vi0), xi0)
         cluster.tabv[i] = muladd(fi0, dt, vi0)
         cluster.tabt[i] = tmax
     end

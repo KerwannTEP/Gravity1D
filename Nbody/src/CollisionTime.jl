@@ -26,7 +26,7 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
         dt = tj0 - ti0
         # xi0 = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
         # vi0 = vi0 + fi0 * dt
-        xi0 = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        xi0 = muladd(dt, muladd(fi0*BF_half, dt, vi0), xi0)
         vi0 = muladd(fi0, dt, vi0)
         t = tj0 
     elseif (tj0 < ti0)
@@ -34,17 +34,17 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
         dt = ti0 - tj0
         # xj0 = xj0 + dt * (vj0 + 0.5 * fj0 * dt)
         # vj0 = vj0 + fj0 * dt
-        xj0 = muladd(dt, muladd(0.5*fj0, dt, vj0), xj0)
+        xj0 = muladd(dt, muladd(fj0*BF_half, dt, vj0), xj0)
         vj0 = muladd(fj0, dt, vj0)
         t = ti0 
     end
 
-    a = 0.5*(fi0 - fj0) # This is strictly positive
+    a = (fi0 - fj0)*BF_half # This is strictly positive
     b = vi0 - vj0
     c = xi0 - xj0 # This is negative => c/a <= 0: roots have opposite signs
-    discSq = abs(b^2 - 4*a*c) # always positive
+    discSq = abs(b^2 - BF_4*a*c) # always positive
 
-    q = -0.5 * (b + sign(b) * sqrt(discSq)) # Numerically stable formula
+    q = -(b + sign(b) * sqrt(discSq))*BF_half # Numerically stable formula
     dt1 = q/a
     dt2 = c/q
     if (dt1 > dt2)

@@ -41,23 +41,35 @@ tabargs = ArgParseSettings()
     help = "Name of the output file. Default: 'output'"
     arg_type = String
     default = "output"
+
+    "--mantissa"
+    help = "Length of the mantissa (in bits). Default: 53 (Float64)"
+    arg_type = Int64
+    default = 53
 end
 parsed_args = parse_args(tabargs)
+
+const size_mantissa = parsed_args["mantissa"] # Set to 64 to suppress accumulation of roundoff error (Schulz & al. 2013)
+
+setprecision(size_mantissa)
 
 const p = parsed_args["p"]
 const tdyn_per_save = parsed_args["save_freq"]
 
-const G = parsed_args["G"]
-const M = parsed_args["M"]
-const L = parsed_args["L"]
+const G = BigFloat(parsed_args["G"])
+const M = BigFloat(parsed_args["M"])
+const L = BigFloat(parsed_args["L"])
 
 const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
 const N = 2^p
-const alpha = 2*L/pi
+const alpha = 2*L/BigFloat(pi)
 
 const tdyn = sqrt(L*M/G)
-const tmax = parsed_args["tmax"] * tdyn
+const tmax = BigFloat(parsed_args["tmax"]) * tdyn
+
+
+
 
 const m_avg = M/N # Average mass. For single-mass cluster, each star has mass m_avg * 1/1
