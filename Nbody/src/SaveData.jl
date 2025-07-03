@@ -79,9 +79,8 @@ function save_final_state(time::Double64, nbcoll::Int64, cluster::Cluster)
     tabf_comp = cluster.tabf_comp
     tabm = cluster.tabm 
      
-    if (!isdir(src_dir*"/../data/restart/"))
-        mkdir(src_dir*"/../data/restart/")
-    end
+
+    mkpath(src_dir*"/../data/restart/")
     @save src_dir*"/../data/restart/restart_data_"*output_name*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
 
 end
