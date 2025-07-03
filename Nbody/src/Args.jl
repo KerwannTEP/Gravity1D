@@ -1,4 +1,11 @@
 using ArgParse
+using DoubleFloats # https://github.com/JuliaMath/DoubleFloats.jl
+
+# Double64 : faster than BigFloat(64), about 106-bit mantissa, equivalen to _float128
+# Slower than Float64, but not as dramatically as BigFloat64
+# BigFloat(53) : N=128, Tend=10^6 tdyn : 1h49min
+# Float64: 5min
+# DoubleFloat64  ?
 
 const src_dir = @__DIR__ 
 
