@@ -5,7 +5,7 @@ using DoubleFloats # https://github.com/JuliaMath/DoubleFloats.jl
 # Slower than Float64, but not as dramatically as BigFloat64
 # BigFloat(53) : N=128, Tend=10^6 tdyn : 1h49min
 # Float64: 5min
-# DoubleFloat64  ?
+# DoubleFloat64: 27 minutes, 30 seconds, 173 milliseconds
 
 const src_dir = @__DIR__ 
 
@@ -49,32 +49,24 @@ tabargs = ArgParseSettings()
     arg_type = String
     default = "output"
 
-    "--mantissa"
-    help = "Length of the mantissa (in bits). Default: 53 (Float64)"
-    arg_type = Int64
-    default = 53
 end
 parsed_args = parse_args(tabargs)
-
-const size_mantissa = parsed_args["mantissa"] # Set to 64 to suppress accumulation of roundoff error (Schulz & al. 2013)
-
-setprecision(size_mantissa)
 
 const p = parsed_args["p"]
 const tdyn_per_save = parsed_args["save_freq"]
 
-const G = BigFloat(parsed_args["G"])
-const M = BigFloat(parsed_args["M"])
-const L = BigFloat(parsed_args["L"])
+const G = Double64(parsed_args["G"])
+const M = Double64(parsed_args["M"])
+const L = Double64(parsed_args["L"])
 
 const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
 const N = 2^p
-const alpha = 2*L/BigFloat(pi)
+const alpha = 2*L/D64_pi
 
 const tdyn = sqrt(L*M/G)
-const tmax = BigFloat(parsed_args["tmax"]) * tdyn
+const tmax = Double64(parsed_args["tmax"]) * tdyn
 
 
 

@@ -1,6 +1,10 @@
-const BF_0 = BigFloat(0)
-const BF_1 = BigFloat(1)
-const BF_2 = BigFloat(2)
-const BF_4 = BigFloat(4)
+using DoubleFloats
 
-const BF_half = BigFloat(0.5)
+const D64_0 = Double64(0)
+const D64_1 = Double64(1)
+const D64_2 = Double64(2)
+const D64_4 = Double64(4)
+
+const D64_half = Double64(0.5)
+const D64_pi = Double64(pi)
+const D64_sqrt2 = sqrt(D64_2)

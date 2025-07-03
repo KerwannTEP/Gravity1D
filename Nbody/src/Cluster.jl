@@ -2,21 +2,21 @@
 # Cluster mean field
 ######################################################
 
-function _rho(x::BigFloat)
+function _rho(x::Double64)
 
     return M/(2*alpha) * (1+(x/alpha)^2)^(-3/2)
 
 end
 
-function _psi(x::BigFloat)
+function _psi(x::Double64)
 
     return G*M*alpha*sqrt(1+(x/alpha)^2)
 
 end
 
-function _F(E::BigFloat)
+function _F(E::Double64)
 
-    return 15*G^3*M^4*alpha^2/(32*sqrt(BF_2)) * E^(-7/2)
+    return 15*G^3*M^4*alpha^2/(32*sqrt(D64_2)) * E^(-7/2)
 
 end
 
@@ -28,11 +28,11 @@ end
 
 mutable struct Cluster
     tabindex::Vector{Int64} # Particle index (at t=0)
-    tabx::Vector{BigFloat} # Position
-    tabv::Vector{BigFloat} # Velocity
-    tabm::Vector{BigFloat} # Mass (in fraction of m_avg)
-    tabf::Vector{BigFloat} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
-    tabt::Vector{BigFloat} # Time of last update (initialization, last collision or final time)
+    tabx::Vector{Double64} # Position
+    tabv::Vector{Double64} # Velocity
+    tabm::Vector{Double64} # Mass (in fraction of m_avg)
+    tabf::Vector{Double64} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
+    tabt::Vector{Double64} # Time of last update (initialization, last collision or final time)
 end
 
 
@@ -40,13 +40,13 @@ end
 # Generate sampling
 ######################################################
 
-function _M(x::BigFloat)
+function _M(x::Double64)
 
     return M/2 * (1 + x/sqrt(x^2+alpha^2))
 
 end
 
-function _invCDF(y::BigFloat) # y in [0, 1]
+function _invCDF(y::Double64) # y in [0, 1]
     # t = x/alpha : x>0 for y>0 and x<0 for y<0
     # z = 2y-1 in [-1,1]
     # y = M(x)/M <=> t^2/(1+t^2) <=> z^2 (1+t^2) = t^2
@@ -60,7 +60,7 @@ function _invCDF(y::BigFloat) # y in [0, 1]
 
 end
 
-function _CDFv(v::BigFloat, x::BigFloat)
+function _CDFv(v::Double64, x::Double64)
     psi = _psi(x)
     rho = _rho(x)
     t = v/sqrt(2*psi)
@@ -71,23 +71,23 @@ function _CDFv(v::BigFloat, x::BigFloat)
 
 end
 
-function _invCDFv(z::BigFloat, x::BigFloat)
+function _invCDFv(z::Double64, x::Double64)
     
-    if (z < 1/2) # then v<0
-        vr = BF_0
-        vl = -BF_1
+    if (z < D64_half) # then v<0
+        vr = D64_0
+        vl = -D64_1
         while (_CDFv(vl, x)> z)
-            vl *= BF_2 
+            vl *= D64_2 
         end
 
         return bisection(v->_CDFv(v, x)-z, vl, vr)
-    elseif (z == 1/2)
-        return BF_0
+    elseif (z == D64_half)
+        return D64_0
     else # then v>0
-        vl = BF_0
-        vr = BF_1
+        vl = D64_0
+        vr = D64_1
         while (_CDFv(vr, x)< z)
-            vr *= BF_2 
+            vr *= D64_2 
         end
 
         return bisection(v->_CDFv(v, x)-z, vl, vr)
@@ -100,11 +100,11 @@ end
 function initialize_cluster() 
 
     cluster = Cluster(zeros(Int64, N),
-                    zeros(BigFloat, N),
-                    zeros(BigFloat, N),
-                    zeros(BigFloat, N),
-                    zeros(BigFloat, N),
-                    zeros(BigFloat, N))
+                    zeros(Double64, N),
+                    zeros(Double64, N),
+                    zeros(Double64, N),
+                    zeros(Double64, N),
+                    zeros(Double64, N))
 
     # Generate positions
     # Fills indices, positions and time
@@ -112,15 +112,15 @@ function initialize_cluster()
     println("Generating positions...")
     for i=1:N 
         println("Progress : ", i, "/", N)
-        u = BigFloat(rand()) # Better generator later ?
+        u = Double64(rand()) # Better generator later ?
         x = _invCDF(u)
         cluster.tabx[i] = x
-        cluster.tabt[i] = BigFloat(0)
+        cluster.tabt[i] = D64_0
     end
 
     cluster.tabx = sort(cluster.tabx)
 
-    mass_left = BF_0 #0 # In fraction of m_avg
+    mass_left = D64_0 #0 # In fraction of m_avg
     mass_right = M #N # In fraction of m_avg
 
     # Fills masses and forces
@@ -145,7 +145,7 @@ function initialize_cluster()
     for i=1:N
         x = cluster.tabx[i]
         println("Progress : ", i, "/", N)
-        z = BigFloat(rand())
+        z = Double64(rand())
         v = _invCDFv(z, x)
         cluster.tabv[i] = v
 
@@ -163,7 +163,7 @@ end
 ######################################################
 
 
-function bisection(fun::Function, xl::BigFloat, xu::BigFloat, tolx::BigFloat=BigFloat(1.0*10^(-15)), tolf::BigFloat=BigFloat(1.0*10^(-15)), iterMAX::Int64=200)
+function bisection(fun::Function, xl::Double64, xu::Double64, tolx::Double64=Double64(1.0*10^(-15)), tolf::Double64=Double64(1.0*10^(-15)), iterMAX::Int64=200)
     if (xl > xu)
         xl, xu = xu, xl # Ordering the input arguments
     end
@@ -180,13 +180,13 @@ function bisection(fun::Function, xl::BigFloat, xu::BigFloat, tolx::BigFloat=Big
     end
 
     #####
-    @assert fl*fu < BF_0 "bisection: NOT A BRACKET : (xl,xu,fl,fu) = "*string((xl,xu,fl,fu))
+    @assert fl*fu < D64_0 "bisection: NOT A BRACKET : (xl,xu,fl,fu) = "*string((xl,xu,fl,fu))
     #####
     iter = 0 # Counter for the iterations
     #####
     while true # Bisection loop
         #####
-        xm = (xl+xu)*BF_half # Middle value
+        xm = (xl+xu)*D64_half # Middle value
         #####
         if ((abs(xu-xl) <= tolx) || (iter > iterMAX)) # The considered bracket is smaller than the tolerance, or we have made too many iterations
             return xm # Returning the middle value
@@ -201,7 +201,7 @@ function bisection(fun::Function, xl::BigFloat, xu::BigFloat, tolx::BigFloat=Big
         end
         #####
         # Otherwise, we iterate the bisection
-        if (fm*fl < BF_0) # One root can be found between the left point and the middle point
+        if (fm*fl < D64_0) # One root can be found between the left point and the middle point
             xu, fu = xm, fm # The upper point becomes the midpoint
         else
             xl, fl = xm, fm # The lower point becomes the midpoint
