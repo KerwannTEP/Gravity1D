@@ -7,7 +7,6 @@ using Statistics
 
 function plot_data()
 
-    # index = div(8192,2)
     index = 1 
 
     listdata = glob("../data/seed_0/output_t_*.txt")
@@ -135,6 +134,8 @@ function plot_data()
 
     display(plt)
     readline()
+
+    println("Max |delta Ptot| = ", maximum(abs.(tabdeltaPtot)))
 
     plt = plot(listt, tabPtot, 
                 xlabel=L"t/t_{\mathrm{dyn}}",
