@@ -23,7 +23,8 @@ mutable struct Cluster
     tabx::Vector{Double64} # Position
     tabv::Vector{Double64} # Velocity
     tabm::Vector{Double64} # Mass (in fraction of m_avg)
-    tabf::Vector{Double64} # Force (per unit mass, i.e. the specific force). (in fraction of G*m_avg): TODO
+    tabf::Vector{Double64} # Force (per unit mass, i.e. the specific force). 
+    tabf_comp::Vector{Double64} # Array used for Kahan summation
     tabt::Vector{Double64} # Time of last update (initialization, last collision or final time)
 end
 
@@ -40,6 +41,7 @@ function initialize_cluster(model::Model)
                     zeros(Double64, N),
                     zeros(Double64, N),
                     zeros(Double64, N),
+                    zeros(Double64, N),
                     zeros(Double64, N))
 
     # Generate positions
@@ -50,7 +52,7 @@ function initialize_cluster(model::Model)
         println("Progress : ", i, "/", N)
         u = Double64(rand()) # Better generator later ?
         x = model._invCDF(u)
-        cluster.tabx[i] = x
+        cluster.tabx[i] = Double64(x)
         cluster.tabt[i] = D64_0
     end
 
@@ -82,7 +84,7 @@ function initialize_cluster(model::Model)
         println("Progress : ", i, "/", N)
         z = Double64(rand())
         v = model._invCDFv(z, x)
-        cluster.tabv[i] = v
+        cluster.tabv[i] = Double64(v)
 
     end
 

@@ -18,6 +18,18 @@ using Dates
 # Journal of Computational Physics 186 (2003) 697–703
 
 
+function kahan_add_array!(sum_array::Vector{Double64}, comp_array::Vector{Double64}, idx::Int, x::Double64)
+
+    y = x - comp_array[idx]
+    t = sum_array[idx] + y
+    comp_array[idx] = (t - sum_array[idx]) - y
+    sum_array[idx] = t
+
+    return nothing
+
+end
+
+
 function main()
 
     if (model_type == "plummer")
@@ -98,8 +110,10 @@ function main()
             cluster.tabm[i] = mj0
             cluster.tabm[i+1] = mi0
 
-            cluster.tabf[i] += mi0 - mj0
-            cluster.tabf[i+1] += mi0 - mj0
+            # Kahan summation using an auxiliary array to reduce loss of precision in the force update
+            deltam = mi0 - mj0
+            kahan_add_array!(cluster.tabf, cluster.tabf_comp, i, deltam)
+            kahan_add_array!(cluster.tabf, cluster.tabf_comp, i+1, deltam)
 
             cluster.tabt[i] = tc
             cluster.tabt[i+1] = tc

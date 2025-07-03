@@ -38,9 +38,9 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
     a = (fi0 - fj0)*D64_half # This is strictly positive
     b = vi0 - vj0
     c = xi0 - xj0 # This is negative => c/a <= 0: roots have opposite signs
-    discSq = abs(b^2 - D64_4*a*c) # always positive
+    discSq = abs(b*b - D64_4*a*c) # always positive
 
-    q = -(b + sign(b) * sqrt(discSq))*D64_half # Numerically stable formula
+    q = -(b + copysign(sqrt(discSq),b))*D64_half # Numerically stable formula
     dt1 = q/a
     dt2 = c/q
     if (dt1 > dt2)
