@@ -3,11 +3,6 @@ using DoubleFloats # https://github.com/JuliaMath/DoubleFloats.jl
 
 # Double64 : faster than BigFloat(64), about 106-bit mantissa, equivalen to _float128
 # Slower than Float64, but not as dramatically as BigFloat64
-# BigFloat(53) : N=128, Tend=10^6 tdyn : 1h49min
-# Float64: 5min
-# DoubleFloat64: 27 minutes, 30 seconds, 173 milliseconds
-
-# In the future, include Kahan summation to keep track of roundoff errors during integration ?
 
 const src_dir = @__DIR__ 
 
@@ -16,10 +11,10 @@ const src_dir = @__DIR__
 ##################################################
 tabargs = ArgParseSettings()
 @add_arg_table! tabargs begin
-    "--p"
-    help = "Power p of the number of particles, N=2^p. Default: 7"
+    "--N"
+    help = "Number of particles. Default: 128"
     arg_type = Int64
-    default = 7
+    default = 128
     "--tmax"
     help = "Final time of the simulation, in units of dynamical times. Default: 1.0"
     arg_type = Float64
@@ -56,10 +51,19 @@ tabargs = ArgParseSettings()
     arg_type = String
     default = "output"
 
+    "--save_final_state"
+    help = "Save final state for restart. Default: false"
+    arg_type = Bool
+    default = false
+    "--restart"
+    help = "Name of the state file to use for the restart. Write nothing if the run is not a restart. Default: ''"
+    arg_type = String
+    default = ""
+
 end
 parsed_args = parse_args(tabargs)
 
-const p = parsed_args["p"]
+const N = parsed_args["N"]
 const tdyn_per_save = parsed_args["save_freq"]
 
 const G = Double64(parsed_args["G"])
@@ -70,12 +74,15 @@ const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
 const model_type = parsed_args["model"]
-
-const N = 2^p
-const alpha = 2*L/D64_pi
+const alpha = D64_2*L/D64_pi
 
 const tdyn = sqrt(L*M/G)
 const tmax = Double64(parsed_args["tmax"]) * tdyn
+
+const SAVE_FINAL_STATE = parsed_args["save_final_state"]
+const restart_file = parsed_args["restart"]
+
+const IS_RESTART = length(restart_file) > 0 ? true : false
 
 
 const m_avg = M/N # Average mass
