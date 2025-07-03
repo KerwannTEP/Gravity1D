@@ -93,19 +93,43 @@ function plot_data()
     display(plt)
     readline()
 
+    tabhalf = sqrt.(listt[2:nbt]) ./10^15
+    tablin = listt[2:nbt] ./ 10^15
+    tabsqr = listt[2:nbt] .^ 2 ./ 10^18
+
     plt = plot(listt[2:nbt], tabfE[2:nbt], 
                 xlabel=L"t/t_{\mathrm{dyn}}",
                 ylabel=L"|\Delta E/E|",
                 title="Fractional energy",
-                xlims=(0.0, listt[nbt]),
+                # xlims=(0.0, listt[nbt]),
                 yaxis=:log10,
+                xaxis=:log10,
                 yticks=10.0 .^ (-20:1:1),
                 yminorticks=10,
                 marker=true,
                 markersize=s,
                 frame=:box,
                 # size=(900,600),
-                label=false)
+                legend=:topleft,
+                label="Error")
+
+    plot!(plt, listt[2:nbt], tabhalf,
+            yaxis=:log10,
+            xaxis=:log10,
+            legend=:topleft,
+            label=L"y=t/2")
+
+    plot!(plt, listt[2:nbt],  tablin,
+            yaxis=:log10,
+            xaxis=:log10,
+            legend=:topleft,
+            label=L"y=t")
+
+    plot!(plt, listt[2:nbt],  tabsqr,
+            yaxis=:log10,
+            xaxis=:log10,
+            legend=:topleft,
+            label=L"y=t^2")
 
     display(plt)
     readline()
