@@ -39,6 +39,11 @@ tabargs = ArgParseSettings()
     help = "Characteristic size of the cluster. Default: 1.0"
     arg_type = Float64
     default = 1.0
+
+    "--model"
+    help = "Model of the initial conditions. Default: 'plummer'"
+    arg_type = String
+    default = "plummer"
    
     "--seed"
     help = "Seed of the random number generator. Default: 0"
@@ -62,6 +67,8 @@ const L = Double64(parsed_args["L"])
 const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
+const model_type = parsed_args["model"]
+
 const N = 2^p
 const alpha = 2*L/D64_pi
 
@@ -69,6 +76,4 @@ const tdyn = sqrt(L*M/G)
 const tmax = Double64(parsed_args["tmax"]) * tdyn
 
 
-
-
-const m_avg = M/N # Average mass. For single-mass cluster, each star has mass m_avg * 1/1
+const m_avg = M/N # Average mass

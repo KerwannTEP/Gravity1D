@@ -13,16 +13,10 @@ function save_intermediate_data(time::Double64, cluster::Cluster)
         ti0 = cluster.tabt[i]
         xi0 = cluster.tabx[i]
         vi0 = cluster.tabv[i]
-        fi0 = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
+        fi0 = cluster.tabf[i]
         mi0 = cluster.tabm[i]
 
         dt = time-ti0
-
-        # x = xi0 + vi0*(time-ti0) + 0.5*fi0*(time-ti0)^2
-        # v = vi0 + fi0 * (time-ti0)
-
-        # x = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
-        # v = vi0 + fi0 * dt
 
         x = muladd(dt, muladd(fi0*D64_half, dt, vi0), xi0)
         v = muladd(fi0, dt, vi0)
@@ -30,7 +24,7 @@ function save_intermediate_data(time::Double64, cluster::Cluster)
         data[i, 1] = index0
         data[i, 2] = x.hi
         data[i, 3] = v.hi
-        data[i, 4] = mi0.hi #* m_avg 
+        data[i, 4] = mi0.hi
         data[i, 5] = fi0.hi
     end
    
@@ -52,13 +46,13 @@ function save_data(time::Double64, cluster::Cluster)
         t = cluster.tabt[i]
         x = cluster.tabx[i]
         v = cluster.tabv[i]
-        f = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
+        f = cluster.tabf[i]
         m = cluster.tabm[i]
 
         data[i, 1] = index
         data[i, 2] = x.hi
         data[i, 3] = v.hi
-        data[i, 4] = m.hi #* m_avg 
+        data[i, 4] = m.hi
         data[i, 5] = f.hi
 
     end

@@ -1,7 +1,11 @@
 include("Constants.jl")
 include("Args.jl")
+include("Tools.jl")
 
+include("model/Plummer.jl")
+include("model/Harmonic.jl")
 include("Cluster.jl")
+
 include("Heap.jl")
 include("CollisionTime.jl")
 include("SaveData.jl")
@@ -16,12 +20,21 @@ using Dates
 
 function main()
 
+    if (model_type == "plummer")
+        model = Model(_rho_plummer, _psi_plummer, _invCDF_plummer, _invCDFv_plummer)
+    elseif (model_type == "harmonic")
+        model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
+    else 
+        return "Error: Model '" * model_type * "' is unavailable."
+    end
+
+
     println("Initialization...")
 
     mkpath(src_dir * "/../data/seed_" * string(seed))
 
     Random.seed!(seed)
-    cluster = initialize_cluster()
+    cluster = initialize_cluster(model)
     time = D64_0
     nbcoll = 0
 
@@ -54,23 +67,19 @@ function main()
             ti0 = cluster.tabt[i]
             xi0 = cluster.tabx[i]
             vi0 = cluster.tabv[i]
-            fi0 = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
+            fi0 = cluster.tabf[i]
             mi0 = cluster.tabm[i]
             indexi0 = cluster.tabindex[i]
 
             tj0 = cluster.tabt[i+1]
             xj0 = cluster.tabx[i+1]
             vj0 = cluster.tabv[i+1]
-            fj0 = cluster.tabf[i+1] #* G * m_avg # Convert forces back to standard units
+            fj0 = cluster.tabf[i+1]
             mj0 = cluster.tabm[i+1]
             indexj0 = cluster.tabindex[i+1]
 
             dti = tc - ti0
             dtj = tc - tj0
-
-            # xc = xi0 + dti * (vi0 + 0.5 * fi0 * dti)
-            # vi = vi0 + fi0 * dti
-            # vj = vj0 + fj0 * dtj
 
             xc = muladd(dti, muladd(fi0*D64_half, dti, vi0), xi0)
             vi = muladd(fi0, dti, vi0)
@@ -89,7 +98,6 @@ function main()
             cluster.tabm[i] = mj0
             cluster.tabm[i+1] = mi0
 
-            # Use rationals here to avoid roundoff errors (TODO later if necessary)
             cluster.tabf[i] += mi0 - mj0
             cluster.tabf[i+1] += mi0 - mj0
 
@@ -153,10 +161,8 @@ function main()
         ti0 = cluster.tabt[i]
         xi0 = cluster.tabx[i]
         vi0 = cluster.tabv[i]
-        fi0 = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
+        fi0 = cluster.tabf[i]
 
-        # cluster.tabx[i] = xi0 + vi0*(tmax-ti0) + 0.5*fi0*(tmax-ti0)^2
-        # cluster.tabv[i] = vi0 + fi0 * (tmax-ti0)
         dt = tmax-ti0
         cluster.tabx[i] = muladd(dt, muladd(fi0*D64_half, dt, vi0), xi0)
         cluster.tabv[i] = muladd(fi0, dt, vi0)
