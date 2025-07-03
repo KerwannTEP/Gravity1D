@@ -6,13 +6,13 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
     ti0 = cluster.tabt[i]
     xi0 = cluster.tabx[i]
     vi0 = cluster.tabv[i]
-    fi0 = cluster.tabf[i] #* G * m_avg # Convert forces back to standard units
+    fi0 = cluster.tabf[i]
 
     # Star j=i+1
     tj0 = cluster.tabt[i+1]
     xj0 = cluster.tabx[i+1]
     vj0 = cluster.tabv[i+1]
-    fj0 = cluster.tabf[i+1]# * G * m_avg # Convert forces back to standard units
+    fj0 = cluster.tabf[i+1]
 
     xi_i = xi0
     xj_i = xj0
@@ -24,27 +24,23 @@ function compute_collision_time_i(i::Int64, cluster::Cluster)
     if (ti0 < tj0)
         # Temporarily evolve i from ti0 to tj0
         dt = tj0 - ti0
-        # xi0 = xi0 + dt * (vi0 + 0.5 * fi0 * dt)
-        # vi0 = vi0 + fi0 * dt
-        xi0 = muladd(dt, muladd(0.5*fi0, dt, vi0), xi0)
+        xi0 = muladd(dt, muladd(fi0*D64_half, dt, vi0), xi0)
         vi0 = muladd(fi0, dt, vi0)
         t = tj0 
     elseif (tj0 < ti0)
         # Temporarily evolve j from tj0 to ti0
         dt = ti0 - tj0
-        # xj0 = xj0 + dt * (vj0 + 0.5 * fj0 * dt)
-        # vj0 = vj0 + fj0 * dt
-        xj0 = muladd(dt, muladd(0.5*fj0, dt, vj0), xj0)
+        xj0 = muladd(dt, muladd(fj0*D64_half, dt, vj0), xj0)
         vj0 = muladd(fj0, dt, vj0)
         t = ti0 
     end
 
-    a = 0.5*(fi0 - fj0) # This is strictly positive
+    a = (fi0 - fj0)*D64_half # This is strictly positive
     b = vi0 - vj0
     c = xi0 - xj0 # This is negative => c/a <= 0: roots have opposite signs
-    discSq = abs(b^2 - 4*a*c) # always positive
+    discSq = abs(b^2 - D64_4*a*c) # always positive
 
-    q = -0.5 * (b + sign(b) * sqrt(discSq)) # Numerically stable formula
+    q = -(b + sign(b) * sqrt(discSq))*D64_half # Numerically stable formula
     dt1 = q/a
     dt2 = c/q
     if (dt1 > dt2)
