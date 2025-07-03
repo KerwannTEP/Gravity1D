@@ -40,17 +40,22 @@ function main()
         return "Error: Model '" * model_type * "' is unavailable."
     end
 
-
     println("Initialization...")
 
     mkpath(src_dir * "/../data/seed_" * string(seed))
-
     Random.seed!(seed)
-    cluster = initialize_cluster(model)
-    time = D64_0
-    nbcoll = 0
 
-    # Save initial state
+    if (!IS_RESTART) # Not a restart
+        cluster = initialize_cluster(model)
+        time = D64_0
+        time_since_last_tdyn = D64_0
+        nbcoll = 0
+    else # Restart
+        cluster, time, nbcoll = load_restart_data()
+        time_since_last_tdyn = time % (tdyn_per_save * tdyn)
+    end
+
+    # Save initial snapshot
     save_data(time, cluster)
 
     # Initialize collision times and heap structure
@@ -64,7 +69,6 @@ function main()
     timing_start = now()
 
     # Main loop
-    time_since_last_tdyn = D64_0
     while (time < tmax)
         tc, i = find_next_collision(heap)
 
@@ -185,11 +189,16 @@ function main()
 
     timing_end = now()
 
-    # Save the final state
+    # Save the final snapshot at time=tmax
     save_data(tmax, cluster)
 
     # https://stackoverflow.com/questions/41293747/round-julias-millisecond-type-to-nearest-second-or-minute
     dtim = timing_end - timing_start
+
+    # Save the exact bit-to-bit final state (for restart purposes)
+    if (SAVE_FINAL_STATE)
+        save_final_state(tmax, nbcoll, cluster)
+    end
 
     println("-----------------------")
 

@@ -1,4 +1,5 @@
 using DelimitedFiles
+using JLD2
 
 # TODO : Folder of the seed
 # Use binary files instead ?
@@ -62,5 +63,25 @@ function save_data(time::Double64, cluster::Cluster)
     writedlm(namefile, data)
 
     return nothing
+
+end
+
+# Save the exact bit state of the data at final time for exact bit-to-bit restart
+# Very efficient binary format: Should we use this in the final product ?
+# It can only be read with Julia however
+function save_final_state(time::Double64, nbcoll::Int64, cluster::Cluster)
+
+    tabindex = cluster.tabindex
+    tabt = cluster.tabt
+    tabx = cluster.tabx 
+    tabv = cluster.tabv 
+    tabf = cluster.tabf
+    tabf_comp = cluster.tabf_comp
+    tabm = cluster.tabm 
+     
+    if (!isdir(src_dir*"/../data/restart/"))
+        mkdir(src_dir*"/../data/restart/")
+    end
+    @save src_dir*"/../data/restart/restart_data_"*output_name*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
 
 end
