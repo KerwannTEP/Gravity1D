@@ -20,6 +20,9 @@ function plot_data()
     tabmeanx = zeros(Float64, nbt)
     tabdeltameanx = zeros(Float64, nbt)
 
+    tabPtot = zeros(Float64, nbt)
+    tabdeltaPtot = zeros(Float64, nbt)
+
     for i=1:nbt 
         time = split(split(listdata[i],"_")[end],".")
         time = time[1]*"."*time[2]
@@ -41,6 +44,12 @@ function plot_data()
 
         meanx = mean(data[:, 2])
         meanv = mean(data[:, 3])
+
+        tabPtot[i] = meanv
+
+        if (i>2)
+            tabdeltaPtot[i] = meanv - tabPtot[1]
+        end
 
         if (i==1)
             meanx0 = meanx
@@ -126,6 +135,20 @@ function plot_data()
 
     display(plt)
     readline()
+
+    plt = plot(listt, tabPtot, 
+                xlabel=L"t/t_{\mathrm{dyn}}",
+                ylabel=L"P_{\mathrm{tot}}(t)",
+                title="Total momentum",
+                marker=true,
+                markersize=s,
+                frame=:box,
+                # size=(900,600),
+                label=false)
+
+    display(plt)
+    readline()
+
 
 end
 

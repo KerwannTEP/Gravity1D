@@ -20,6 +20,17 @@ function rho0(x::Float64)
 
 end
 
+function rho_harmonic(x::Float64)
+
+    a = L
+    if (abs(x) <= a)
+        return M/(2*a)
+    else
+        return 0.0
+    end
+
+end
+
 function rho_th(x::Float64)
     return M/(2*L) * sech(x/L)^2
 end
@@ -62,6 +73,7 @@ function plot_data()
 
     tabth = rho_th.(datax)
     tab0 = rho0.(datax0)
+    # tab0 = rho_harmonic.(datax0)
 
     plt = density(datax0, xlims=(-xmax,xmax), label=L"t/t_{\mathrm{dyn}}=0", linewidth=2, linecolor=:blue)
     density!(datax, xlims=(-xmax,xmax), label=L"t/t_{\mathrm{dyn}}="*string(tend), linewidth=2, linecolor=:red)
@@ -70,6 +82,7 @@ function plot_data()
     # histogram!(plt, datax, xlims=(-xmax,xmax), bins=-xmax:dx:xmax, label=L"t/t_{\mathrm{dyn}}="*string(tend), normalize=:pdf)#, fillalpha=0, linewidth=2)
 
     plot!(plt, datax0, tab0, label="Plummer", linecolor=:purple)
+    # plot!(plt, datax0, tab0, label="Harmonic", linecolor=:purple)
     plot!(plt, datax, tabth, label="Thermal", linecolor=:black)
 
     display(plt)

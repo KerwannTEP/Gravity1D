@@ -7,6 +7,8 @@ using DoubleFloats # https://github.com/JuliaMath/DoubleFloats.jl
 # Float64: 5min
 # DoubleFloat64: 27 minutes, 30 seconds, 173 milliseconds
 
+# In the future, include Kahan summation to keep track of roundoff errors during integration ?
+
 const src_dir = @__DIR__ 
 
 ##################################################
