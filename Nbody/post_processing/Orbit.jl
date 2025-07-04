@@ -3,14 +3,39 @@ using DelimitedFiles
 using Plots 
 using LaTeXStrings
 using Statistics
+using ArgParse
+
+
+##################################################
+# Parsing of the command-line arguments
+##################################################
+tabargs = ArgParseSettings()
+@add_arg_table! tabargs begin
+    "--index"
+    help = "Particle index. Default: 1"
+    arg_type = Int64
+    default = 1
+    "--seed"
+    help = "Seed of the random number generator. Default: 0"
+    arg_type = Int64
+    default = 0
+    "--output"
+    help = "Name of the output file. Default: 'output'"
+    arg_type = String
+    default = "output"
+end
+parsed_args = parse_args(tabargs)
+
+const index = parsed_args["index"]
+const seed = parsed_args["seed"]
+const output_name = parsed_args["output"]
 
 
 function plot_data()
 
-    index = 1 
-
-    listdata = glob("../data/seed_0/output_t_*.txt")
+    listdata = glob("../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_*.txt")
     nbt = length(listdata)
+
     tabx = zeros(Float64, nbt)
     tabv = zeros(Float64, nbt)
     tabf = zeros(Float64, nbt)
@@ -38,6 +63,9 @@ function plot_data()
     meanv0 = 0.0
 
     for i=1:nbt 
+
+        println("Progress : ", i, "/", nbt)
+        
         data = readdlm(listdata[i])
         pp = sortperm(data[:,1])
 
@@ -150,6 +178,7 @@ function plot_data()
     display(plt)
     readline()
 
+    return nothing
 
 end
 

@@ -1,5 +1,3 @@
-using DoubleFloats
-
 const D64_0 = Double64(0)
 const D64_1 = Double64(1)
 const D64_2 = Double64(2)

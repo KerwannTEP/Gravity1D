@@ -1,9 +1,22 @@
+######################################################
+# Kahan summation
+######################################################
+
+function kahan_add_array!(sum_array::Vector{Double64}, comp_array::Vector{Double64}, idx::Int, x::Double64)
+
+    y = x - comp_array[idx]
+    t = sum_array[idx] + y
+    comp_array[idx] = (t - sum_array[idx]) - y
+    sum_array[idx] = t
+
+    return nothing
+
+end
 
 
 ######################################################
-# Tools
+# Bisection
 ######################################################
-
 
 function bisection(fun::Function, xl::Double64, xu::Double64, tolx::Double64=Double64(1.0*10^(-15)), tolf::Double64=Double64(1.0*10^(-15)), iterMAX::Int64=200)
     if (xl > xu)

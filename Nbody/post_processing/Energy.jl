@@ -3,14 +3,42 @@ using DelimitedFiles
 using Plots 
 using LaTeXStrings
 using Statistics
+using ArgParse
 
-const G = 1.0
+
+##################################################
+# Parsing of the command-line arguments
+##################################################
+tabargs = ArgParseSettings()
+@add_arg_table! tabargs begin
+    "--seed"
+    help = "Seed of the random number generator. Default: 0"
+    arg_type = Int64
+    default = 0
+    "--output"
+    help = "Name of the output file. Default: 'output'"
+    arg_type = String
+    default = "output"
+
+    "--G"
+    help = "Newton's constant. Default: 1.0"
+    arg_type = Float64
+    default = 1.0
+end
+parsed_args = parse_args(tabargs)
+
+const seed = parsed_args["seed"]
+const output_name = parsed_args["output"]
+
+const G = parsed_args["G"]
 const prec = 10^(-16)
+
 
 function plot_data()
 
-    listdata = glob("../data/seed_0/output_t_*.txt")
+    listdata = glob("../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_*.txt")
     nbt = length(listdata)
+
     tabE = zeros(Float64, nbt)
     tabfE = zeros(Float64, nbt)
     listt = zeros(Float64, nbt)
@@ -117,7 +145,7 @@ function plot_data()
             yaxis=:log10,
             xaxis=:log10,
             legend=:topleft,
-            label=L"y=t/2")
+            label=L"y=\sqrt{t}")
 
     plot!(plt, listt[2:nbt],  tablin,
             yaxis=:log10,
@@ -125,14 +153,17 @@ function plot_data()
             legend=:topleft,
             label=L"y=t")
 
-    plot!(plt, listt[2:nbt],  tabsqr,
-            yaxis=:log10,
-            xaxis=:log10,
-            legend=:topleft,
-            label=L"y=t^2")
+    # plot!(plt, listt[2:nbt],  tabsqr,
+    #         yaxis=:log10,
+    #         xaxis=:log10,
+    #         legend=:topleft,
+    #         label=L"y=t^2")
 
     display(plt)
     readline()
+
+    return nothing
+    
 end
 
 plot_data()

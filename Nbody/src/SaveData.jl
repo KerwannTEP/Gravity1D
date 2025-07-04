@@ -1,6 +1,3 @@
-using DelimitedFiles
-using JLD2
-
 # TODO : Folder of the seed
 # Use binary files instead ?
 
@@ -30,7 +27,7 @@ function save_intermediate_data(time::Double64, cluster::Cluster)
     end
    
     # Save data as "output_t_time.txt"
-    namefile = src_dir * "/../data/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
     writedlm(namefile, data)
 
     return nothing
@@ -59,7 +56,7 @@ function save_data(time::Double64, cluster::Cluster)
     end
 
     # Save tabstars as "output_t_time.txt"
-    namefile = src_dir * "/../data/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
     writedlm(namefile, data)
 
     return nothing
@@ -81,6 +78,6 @@ function save_final_state(time::Double64, nbcoll::Int64, cluster::Cluster)
      
 
     mkpath(src_dir*"/../data/restart/")
-    @save src_dir*"/../data/restart/restart_data_"*output_name*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
+    @save src_dir*"/../data/restart/restart_data_"*output_name*"_seed_"*string(seed)*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
 
 end

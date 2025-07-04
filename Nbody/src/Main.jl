@@ -1,3 +1,11 @@
+using ArgParse
+using Dates
+using DelimitedFiles
+using DoubleFloats
+using JLD2
+using Random
+
+
 include("Constants.jl")
 include("Args.jl")
 include("Tools.jl")
@@ -10,24 +18,10 @@ include("Heap.jl")
 include("CollisionTime.jl")
 include("SaveData.jl")
 
-using Random
-using Dates
 
 # Algorithm inspired by Noullez, Fanelli & Aurell (2003)
 # A heap-based algorithm for the study of one-dimensional particle systems
 # Journal of Computational Physics 186 (2003) 697–703
-
-
-function kahan_add_array!(sum_array::Vector{Double64}, comp_array::Vector{Double64}, idx::Int, x::Double64)
-
-    y = x - comp_array[idx]
-    t = sum_array[idx] + y
-    comp_array[idx] = (t - sum_array[idx]) - y
-    sum_array[idx] = t
-
-    return nothing
-
-end
 
 
 function main()
@@ -37,12 +31,13 @@ function main()
     elseif (model_type == "harmonic")
         model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
     else 
-        return "Error: Model '" * model_type * "' is unavailable."
+        println("ERROR: Model '" * model_type * "' is unavailable.")
+        return nothing
     end
 
     println("Initialization...")
 
-    mkpath(src_dir * "/../data/seed_" * string(seed))
+    mkpath(src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/")
     Random.seed!(seed)
 
     if (!IS_RESTART) # Not a restart
