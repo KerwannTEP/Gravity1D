@@ -12,6 +12,7 @@ include("Tools.jl")
 
 include("model/Plummer.jl")
 include("model/Harmonic.jl")
+include("model/Cold.jl")
 include("Cluster.jl")
 
 include("Heap.jl")
@@ -30,7 +31,9 @@ function main()
         model = Model(_rho_plummer, _psi_plummer, _invCDF_plummer, _invCDFv_plummer)
     elseif (model_type == "harmonic")
         model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
-    else 
+    elseif (model_type == "cold")
+        # Do nothing
+    else
         println("ERROR: Model '" * model_type * "' is unavailable.")
         return nothing
     end
@@ -41,7 +44,11 @@ function main()
     Random.seed!(seed)
 
     if (!IS_RESTART) # Not a restart
-        cluster = initialize_cluster(model)
+        if (model_type == "cold")
+            cluster = initialize_cold_cluster()
+        else
+            cluster = initialize_cluster(model)
+        end
         time = D64_0
         time_since_last_tdyn = D64_0
         nbcoll = 0

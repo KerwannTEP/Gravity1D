@@ -3,7 +3,7 @@ Exact N-body integrator for 1D gravity.
 
 ## Aim of the code
 
-This repository aims to compute the exact evolution of a one-dimensional self-gravitating system of N particles. It is a heap-based, event-driven algorithm which computes the collision times of each particles, as described by [Noullez & al. (2001)](https://ui.adsabs.harvard.edu/abs/2001cond.mat..1336N/abstract). Following the observations of [Schulz & al (2013)](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract), we use a 106-bit mantissa (via the `DoubleFloats.jl` package) to suppress the accumulation of roundoff error during long simulations.
+This repository aims to compute the exact evolution of a one-dimensional self-gravitating system of N particles. It is a heap-based, event-driven algorithm which computes the collision times of each particles, as described by [Noullez & al. (2001)](https://ui.adsabs.harvard.edu/abs/2001cond.mat..1336N/abstract). Following the observations of [Schulz & al. (2013)](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract), we use a 106-bit mantissa (via the `DoubleFloats.jl` package) to suppress the accumulation of roundoff errors during long simulations.
 
 ## Installation
 
@@ -93,8 +93,14 @@ $ julia Main.jl --N 100 --tmax 200.0 --save_freq 10 --model plummer --seed 0 --o
 
 starting at `t=100` and ending at `t=200`.
 
+The models that can be used as initial conditions are:
 
-## Post-treament
+- `plummer` : A one-dimensional analog to the Plummer model (see [Roule & Fouvry, 2022](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract)),
+- `harmonic` : The one-dimensional harmonic system,
+- `cold` : A one-dimension, cold homogeneous system (see [Schulz & al., 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract)).
+
+
+## Post-treatment
 
 We provide a series of Julia scripts to treat the data saved during the simulation in the `post_treatment` folder.
 
