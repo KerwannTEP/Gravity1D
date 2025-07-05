@@ -76,6 +76,24 @@ function main()
 
         if (tc < tmax) # If the next collision occurs before tmax
 
+            # Save intermediate data
+            # Save each tdyn*n_per_dyn between last collision and time 
+            if (tdyn_per_save > D64_0)
+
+                time_last_save = time - time_since_last_tdyn # Time of last tdyn-save
+                time_next_save = time_last_save + tdyn_per_save * tdyn # Potential time of next tdyn-save
+
+                while (time_next_save < tc) # While there are tdyn-save until next collision, save every tdyn-save
+                    save_intermediate_data(time_next_save, cluster)
+                    time_last_save = time_next_save # Update time of last tdyn-save
+                    time_next_save = time_last_save + tdyn_per_save * tdyn # Update potential time of next tdyn-save
+                    time_since_last_tdyn = D64_0
+
+                    time = time_last_save # Update time
+                end
+
+            end
+
             ####### Particles i and i+1 collide at tc #######
 
             # Update arrays : x_i(tc) = x_j(tc) with j=i+1
@@ -146,22 +164,6 @@ function main()
                 index_heap = heap.index_PH[i+1]
                 replace!(heap, index_heap, tc)
             end
-
-            # Save intermediate data
-            if ((tdyn_per_save > 0) && (time_since_last_tdyn >= tdyn_per_save * tdyn))
-
-                # Temporarily evolution each particles to current time
-                # This section is also the slow block of the loop, so it should not be used too frequently (i.e. k should be large)
-                # Total complexity of the run is O(N^2 log N)
-                # Each save has complexity O(N)
-                # Saving each tdyn yields a total additional complexity of O(N^2) until trelax=N tdyn, which is smaller than O(N^2 log N)
-                save_intermediate_data(time, cluster)
-
-                # Reset the collision index
-                time_since_last_tdyn = time_since_last_tdyn % (tdyn_per_save * tdyn)
-            end
-            
-
 
         else # If the next collision occurs after tmax
 

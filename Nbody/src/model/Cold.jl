@@ -42,7 +42,7 @@ function initialize_cold_cluster()
     for i=1:N
         x = cluster.tabx[i]
         println("Progress : ", i, "/", N)
-        v = -V0 * sin(x)
+        v = -V0 * sin(x/L * D64_pi * D64_half)
         cluster.tabv[i] = Double64(v)
 
     end

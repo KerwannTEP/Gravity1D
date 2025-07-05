@@ -1,3 +1,6 @@
+# Test for cold IC first
+# Evolution of (x,v) phase space
+
 using Glob
 using DelimitedFiles
 using Plots 
@@ -56,30 +59,8 @@ const alpha = 2*L/pi
 
 const framepersec = parsed_args["framepersec"]
 
-const xmax = 3.0
-const dx = 0.25
-
-
-function rho0(x::Float64)
-
-    return M/(2*alpha) * (1+(x/alpha)^2)^(-3/2)
-
-end
-
-function rho_harmonic(x::Float64)
-
-    a = L
-    if (abs(x) <= a)
-        return M/(2*a)
-    else
-        return 0.0
-    end
-
-end
-
-function rho_th(x::Float64)
-    return M/(2*L) * sech(x/L)^2
-end
+# const xmax = 2.0
+# const vmax = 0.005
 
 
 function plot_data()
@@ -100,16 +81,28 @@ function plot_data()
     listdata = listdata[p]
     listt = listt[p]
 
+    xmax = 0.0
+    vmax = 0.0
 
-    tabx = range(-xmax, xmax,length=200)
-    if (model_type == "plummer")
-        tab0 = rho0.(tabx)
-    elseif (model_type == "harmonic")
-        tab0 = rho_harmonic.(tabx)
-    end 
-    tabth = rho_th.(tabx)
+    for i=1:nbt 
 
-    ymax = 1#3
+        data = readdlm(listdata[i])
+        datax = data[:,2]
+        datav = data[:,3]
+
+        maxx = maximum(abs.(datax))
+        maxv = maximum(abs.(datav))
+        
+        if (maxx > xmax)
+            xmax = maxx 
+        end
+
+        if (maxv > vmax)
+            vmax = maxv 
+        end
+
+    end
+
 
     anim = @animate for i=1:nbt 
 
@@ -117,30 +110,25 @@ function plot_data()
 
         data = readdlm(listdata[i])
         datax = data[:,2]
-        meanx = mean(datax)
-        datax = datax .- meanx
+        datav = data[:,3]
+        # meanx = mean(datax)
+        # datax = datax .- meanx
 
         time = round(listt[i], digits=1)
 
-        plt = density(datax, 
+        plt = scatter(datax, datav,
                     xlims=(-xmax,xmax), 
-                    ylims=(0, ymax),
+                    ylims=(-vmax,vmax), 
                     title=L"t/t_{\mathrm{dyn}}="*string(time), 
-                    label=L"\rho(x)",
-                    linewidth=2, 
-                    linecolor=:blue)
-
-        if (model_type == "plummer")
-            plot!(plt, tabx, tab0, label="Plummer", linecolor=:black)
-        elseif (model_type == "harmonic")
-            plot!(plt, tabx, tab0, label="Harmonic", linecolor=:black)
-        end 
-        plot!(plt, tabx, tabth, label="Thermal", linecolor=:red)
+                    xlabel=L"x",
+                    ylabel=L"v",
+                    label=false,
+                    frame=:box)
 
     end
 
     mkpath("../data/gif/" * output_name * "/seed_" * string(seed) * "/")
-    namefile_gif = "../data/gif/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".gif"
+    namefile_gif = "../data/gif/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_phase_space.gif"
     gif(anim, namefile_gif, fps = framepersec)
 
     return nothing

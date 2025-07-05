@@ -97,7 +97,7 @@ The models that can be used as initial conditions are:
 
 - `plummer` : A one-dimensional analog to the Plummer model (see [Roule & Fouvry, 2022](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract)),
 - `harmonic` : The one-dimensional harmonic system,
-- `cold` : A one-dimension, cold homogeneous system (see [Schulz & al., 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract)).
+- `cold` : A one-dimensional, cold, homogeneous system (see [Schulz & al., 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract)).
 
 
 ## Post-treatment

@@ -1,11 +1,7 @@
-# TODO : Folder of the seed
-# Use binary files instead ?
-
 function save_intermediate_data(time::Double64, cluster::Cluster)
 
     data = zeros(Float64, N, 5)
 
-    # Temporarily evolve each particle to current time
     for i=1:N
         index0 = cluster.tabindex[i]
         ti0 = cluster.tabt[i]
