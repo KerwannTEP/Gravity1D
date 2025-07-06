@@ -111,12 +111,17 @@ function plot_data()
         data = readdlm(listdata[i])
         datax = data[:,2]
         datav = data[:,3]
+        dataindex = data[:, 1]
         # meanx = mean(datax)
         # datax = datax .- meanx
 
         time = round(listt[i], digits=1)
 
-        plt = scatter(datax, datav,
+        plt = scatter(datax, datav, zcolor=dataindex,
+                    markerstrokewidth=0,
+                    markersize=3,
+                    color=:haline,
+                    colorbar_title="Particle index",
                     xlims=(-xmax,xmax), 
                     ylims=(-vmax,vmax), 
                     title=L"t/t_{\mathrm{dyn}}="*string(time), 
