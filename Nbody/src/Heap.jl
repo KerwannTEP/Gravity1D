@@ -12,16 +12,12 @@ end
 # Helper functions
 
 function parent(i::Int64)
-    return div(i, 2)
+    return div(i-2, base) + 1
 end
 
-function left(i::Int64)
-    return 2*i
-end
-
-function right(i::Int64)
-    return 2*i+1
-end
+function children(i::Int64)
+    return base*(i-1)+2:base*(i-1)+base+1
+end 
 
 # Swap two elements
 function swap!(v::Vector, i::Int64, j::Int64)
@@ -51,15 +47,12 @@ function bubble_down!(heap::MinHeap, i::Int)
     n = length(heap.data)
     current = i
     while true
-        l = left(current)
-        r = right(current)
         smallest = current
 
-        if ((l <= n) && (heap.data[l] < heap.data[smallest]))
-            smallest = l
-        end
-        if ((r <= n) && (heap.data[r] < heap.data[smallest]))
-            smallest = r
+        for child_index in children(current)
+            if ((child_index <= n) && (heap.data[child_index] < heap.data[smallest]))
+                smallest = child_index
+            end
         end
 
         if (smallest == current) # Parent is smaller than children

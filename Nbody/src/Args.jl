@@ -20,6 +20,10 @@ tabargs = ArgParseSettings()
     help = "Frequency of the save, given in number of dynamical times between save (set to -1.0 to turn this option off). Default: 1.0"
     arg_type = Float64
     default = 1.0
+    "--base"
+    help = "Base of the heap structure. Default: 2"
+    arg_type = Int64
+    default = 2
 
     "--G"
     help = "Newton's constant. Default: 1.0"
@@ -62,6 +66,7 @@ parsed_args = parse_args(tabargs)
 
 const N = parsed_args["N"]
 const tdyn_per_save = Double64(parsed_args["save_freq"])
+const base = parsed_args["base"]
 
 const G = Double64(parsed_args["G"])
 const M = Double64(parsed_args["M"])
