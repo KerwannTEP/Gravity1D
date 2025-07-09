@@ -1,3 +1,15 @@
+
+# Function v(x) for the cold initial condition 
+# To be modified depending on which profile the user is interested in
+function velocity_cold(x::Double64)
+
+    V0 = Double64(0.001) * sqrt(G*M*L)
+    # return -V0 * sin(x/L * D64_pi * D64_half)
+    return -V0 * sin(x/L * D64_pi * D64_half)^3
+
+end
+
+
 function initialize_cold_cluster()
 
     cluster = Cluster(zeros(Int64, N),
@@ -36,13 +48,11 @@ function initialize_cold_cluster()
 
     println("Generating velocities...")
 
-    V0 = Double64(0.001) * sqrt(G*M*L)
-
     # Fills velocities
     for i=1:N
         x = cluster.tabx[i]
         println("Progress : ", i, "/", N)
-        v = -V0 * sin(x/L * D64_pi * D64_half)
+        v = velocity_cold(x)
         cluster.tabv[i] = Double64(v)
 
     end

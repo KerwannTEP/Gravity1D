@@ -30,6 +30,7 @@ const index = parsed_args["index"]
 const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
+const G = 1.0
 
 function plot_data()
 
@@ -40,6 +41,10 @@ function plot_data()
     tabv = zeros(Float64, nbt)
     tabf = zeros(Float64, nbt)
     listt = zeros(Float64, nbt)
+
+    tabE = zeros(Float64, nbt)
+    tabEc = zeros(Float64, nbt)
+    tabdE = zeros(Float64, nbt)
 
     tabmeanx = zeros(Float64, nbt)
     tabdeltameanx = zeros(Float64, nbt)
@@ -72,6 +77,8 @@ function plot_data()
         meanx = mean(data[:, 2])
         meanv = mean(data[:, 3])
 
+
+        println("(mean x, mean v) = ", (meanx, meanv))
         tabPtot[i] = meanv
 
         if (i>2)
@@ -82,6 +89,30 @@ function plot_data()
             meanx0 = meanx
             meanv0 = meanv 
         end
+
+        x = data[pp[index], 2]
+        v = data[pp[index], 3]
+
+        N = length(data[:, 1])
+
+        Ti = 0.5*v^2
+        Tci = 0.5*(v-meanv)^2
+        Ui_t = zeros(Float64, Threads.nthreads())
+        Threads.@threads for j=1:N
+            tid = Threads.threadid()
+            xj = data[j, 2]
+            mj = data[j, 4]
+            Ui_t[tid] += G*mj*abs(x-xj)
+        end
+        Ui = 0.0
+        for tid=1:Threads.nthreads()
+            Ui += Ui_t[tid]
+        end
+        Ei = Ti + Ui
+        Eci = Tci + Ui
+        tabE[i] = Ei
+        tabEc[i] = Eci
+        tabdE[i] = Ei - Eci
 
         x = data[pp[index], 2] - meanx
         v = data[pp[index], 3] - meanv
@@ -133,6 +164,45 @@ function plot_data()
                 frame=:box,
                 # size=(900,600),
                 label=false)
+
+    display(plt)
+    readline()
+
+    plt = plot(listt, tabE, 
+                xlabel=L"t/t_{\mathrm{dyn}}",
+                ylabel=L"E_i(t)",
+                title="Particle "*string(index),
+                # marker=true,
+                # markersize=s,
+                frame=:box,
+                # size=(900,600),
+                label=false)
+
+    display(plt)
+    readline()
+
+    plt = plot(listt, tabE, 
+                xlabel=L"t/t_{\mathrm{dyn}}",
+                ylabel=L"E_{c,i}(t)",
+                title="Particle "*string(index),
+                # marker=true,
+                # markersize=s,
+                frame=:box,
+                # size=(900,600),
+                label=false)
+
+    display(plt)
+    readline()
+
+    plt = plot(listt, tabdE, 
+    xlabel=L"t/t_{\mathrm{dyn}}",
+    ylabel=L"\delta E_{c,i}(t)",
+    title="Particle "*string(index),
+    # marker=true,
+    # markersize=s,
+    frame=:box,
+    # size=(900,600),
+    label=false)
 
     display(plt)
     readline()

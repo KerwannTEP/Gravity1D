@@ -125,8 +125,11 @@ function plot_data()
         plt = density(datax, 
                     xlims=(-xmax,xmax), 
                     ylims=(0, ymax),
+                    xlabel=L"x - \langle x \rangle",
+                    ylabel=L"\rho(x)",
                     title=L"t/t_{\mathrm{dyn}}="*string(time), 
-                    label=L"\rho(x)",
+                    label="Instantaneous",
+                    frame=:box,
                     linewidth=2, 
                     linecolor=:blue)
 
@@ -134,6 +137,8 @@ function plot_data()
             plot!(plt, tabx, tab0, label="Plummer", linecolor=:black)
         elseif (model_type == "harmonic")
             plot!(plt, tabx, tab0, label="Harmonic", linecolor=:black)
+        elseif (model_type == "cold")
+            plot!(plt, tabx, tab0, label="Cold", linecolor=:black)
         end 
         plot!(plt, tabx, tabth, label="Thermal", linecolor=:red)
 

@@ -43,6 +43,7 @@ function plot_data()
     tabfE = zeros(Float64, nbt)
     listt = zeros(Float64, nbt)
 
+    tabVir = zeros(Float64, nbt)
 
     for i=1:nbt 
         time = split(split(listdata[i],"_")[end],".")
@@ -97,6 +98,7 @@ function plot_data()
         end
 
         tabE[it] = sumK + sumU
+        tabVir[it] = 2*sumK/abs(sumU)
 
         # Fractional energy
         if (it >= 2)
@@ -158,6 +160,24 @@ function plot_data()
     #         xaxis=:log10,
     #         legend=:topleft,
     #         label=L"y=t^2")
+
+    display(plt)
+    readline()
+
+    plt = plot(listt[1:nbt], tabVir[1:nbt], 
+                xlabel=L"t/t_{\mathrm{dyn}}",
+                ylabel=L"2 T/|U|",
+                title="Virial ratio",
+                yaxis=:log10,
+                yticks=10.0 .^ (-5:1:5),
+                yminorticks=10,
+                # ylims=10.0 .^ (-4,4),
+                xlims=(0.0, listt[nbt]),
+                marker=true,
+                markersize=s,
+                frame=:box,
+                # size=(900,600),
+                label=false)
 
     display(plt)
     readline()
