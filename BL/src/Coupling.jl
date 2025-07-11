@@ -10,7 +10,7 @@ struct CouplingArrays
 
 end
 
-function initialize_CouplingArrays!(var::CouplingArrays, nbK::Int64=100)
+function initialize_CouplingArrays(nbK::Int64=100)
 
     var = CouplingArrays(zeros(Float64, nbK), 
                         zeros(Float64, nbK, kmax),
@@ -37,8 +37,7 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
     tabxp = var.tabxp
     tabgp = var.tabgp
 
-
-    du = 2/nbu
+    du = 2/nbK
     u = -1.0
     theta = 0.0
     thetap = 0.0
@@ -88,7 +87,7 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
     tabxp[1] = xp
     for k=1:kmax
         tabg[1,k] = cos(k*theta) * dthetadu
-        tabgp[1,k] = cos(kp*thetap) * dthetadup
+        tabgp[1,k] = cos(k*thetap) * dthetapdup
     end
 
 
@@ -141,7 +140,7 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
 
         for k=1:kmax
             tabg[i,k] = cos(k*theta) * dthetadu
-            tabgp[i,k] = cos(kp*thetap) * dthetadup
+            tabgp[i,k] = cos(k*thetap) * dthetapdup
         end
 
     end
@@ -164,15 +163,17 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
 
 end
 
-# Always applied compute_CouplingArrays!(xa, xap, var, nbK, nbu)
+# Always apply compute_CouplingArrays!(xa, xap, var, nbK, nbu) beforehand
 # Compute all (k, kp) at once
-
-function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
+function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100)
 
     # compute_CouplingArrays!(xa, xap, var, nbK, nbu)
 
     tabP = zeros(Float64, nbK, kmax)
     tabQ = zeros(Float64, nbK, kmax)
+
+    tabx = var.tabx
+    tabxp = var.tabxp
 
     tabg = var.tabg
     tabgp = var.tabgp
@@ -180,83 +181,85 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
 
     ######### Compute P #########
 
-    sumP = 0.0
-    sumR = 0.0
+    sumP0 = 0.0
+    sumP1 = 0.0
 
-    # Initialization
-    deltaP = 0.0
-    deltaR = 0.0
+    # Initialization j=1
+    deltaP0 = 0.0
+    deltaP1 = 0.0
     xj = tabxp[1]
     for i=1:tabw[2]
         xi = tabx[i]
-        deltaP += tabg[i,k]*(xj-xi)
-        deltaR += tabg[i,k]
+        gi = tabg[i,k]
+        deltaP0 += gi
+        deltaP1 += gi*xi
     end
-    sumP = deltaP
-    sumR = deltaR
+    sumP0 = deltaP0
+    sumP1 = deltaP1
 
-    tabP[i] = sumP
+    tabP[1] = xj*sumP0 - sumP1
 
-    # Recursion
+    # Recursion j>=2
     for j=1:nbK-1
-        deltaP = 0.0
-        deltaR = 0.0
-        xj = tabxp[j]
-
+        deltaP0 = 0.0
+        deltaP1 = 0.0
+        xj = tabxp[j+1]
         # Compute terms j+1
         for i=tabw[j+1]+1:tabw[j+2]
             xi = tabx[i]
-            deltaP += tabg[i,k]*(xj-xi)
-            deltaR += tabg[i,k]
+            gi = tabg[i,k]
+            deltaP0 += gi
+            deltaP1 += gi*xi
         end
-        sumR += deltaR
-        sumP += deltaP + (tabxp[j+1]-tabxp[j])*sumR
+        sumP0 += deltaP0
+        sumP1 += deltaP1
 
-        tabP[i+1] = sumP
+        tabP[j+1] = xj*sumP0 - sumP1
     end
 
     ######### Compute Q #########
 
-    sumQ = 0.0
-    sumS = 0.0
+    sumQ0 = 0.0
+    sumQ1 = 0.0
 
-    # Initialization
-    deltaQ = 0.0
-    deltaS = 0.0
+    # Initialization j=nbK
+    deltaQ0 = 0.0
+    deltaQ1 = 0.0
     xj = tabxp[nbK]
-    for i=tabw[nbK+1]:nbK
+    for i=tabw[nbK+1]+1:nbK
         xi = tabx[i]
-        deltaQ += tabg[i,k]*(xi-xj)
-        deltaS += tabg[i,k]
+        gi = tabg[i,k]
+        deltaQ0 += gi
+        deltaQ1 += gi*xi
     end
-    sumQ = deltaQ
-    sumS = deltaS
-    tabQ[nbK] = sumP
+    sumQ0 = deltaQ0
+    sumQ1 = deltaQ1
 
-    # Recursion
+    tabQ[nbK] = -xj*sumQ0 + sumQ1
+
+    # Recursion j<=nbK-1
     for j=nbK:-1:2
-        wj = tabw[j+1]
-        deltaQ = 0.0
-        deltaS = 0.0
-        xj = tabxp[j]
-
+        deltaQ0 = 0.0
+        deltaQ1 = 0.0
+        xj = tabxp[j-1]
         # Compute terms j-1
         for i=tabw[j]+1:tabw[j+1]
             xi = tabx[i]
-            deltaQ += tabg[i,k]*(xi-xj)
-            deltaS += tabg[i,k]
+            gi = tabg[i,k]
+            deltaQ0 += gi
+            deltaQ1 += gi*xi
         end
-        sumQ += deltaQ + (tabxp[j]-tabxp[j-1])*sumS
-        sumS += deltaS
+        sumQ0 += deltaQ0
+        sumQ1 += deltaQ1
 
-        tabQ[j-1] = sumP
+        tabQ[j-1] = -xj*sumQ0 + sumQ1
     end
 
     ######### Compute coupling coefficients #########
 
     psikkp = 0.0
     for j=1:nbK 
-        gj = tabgp[j]
+        gj = tabgp[j,kp]
         psikkp += gj * (tabP[j] + tabQ[j])
     end
 
@@ -266,13 +269,31 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
 
 end
 
+function _psikkp_bare_naive(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100)
+
+    sum = 0.0
+    for i=1:nbK 
+        gi = var.tabg[i,k]
+        xi = var.tabx[i]
+        for j=1:nbK 
+            gj = var.tabgp[j,kp]
+            xj = var.tabxp[j]
+            sum += gi*gj*abs(xi-xj)
+        end
+    end
+    sum *= 4*G/(pi^2*nbK^2)
+
+    return sum
+end
+
+
 # Compute psikkp_bare on a grid of (k,k',j,j') = (p, p')
 
 # Compute psi_{kk'}^{\rd}(J,J',omega=k*Omega(J)+I*eps_im)
 # We precalculated the bare coupling coefficients beforehand
 # TODO: Replace J by s with s=atan(J) to compacity the space?
 
-function psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_bare::Array{Float64}, eps_mat::Float64=10^(-5), maxIter::Int64=100)
+function _psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_bare::Array{Float64}, eps_mat::Float64=10^(-5), maxIter::Int64=100)
 
     # Feed as argument tabpsi_bare as a (p, p') matrix of size nbp*nbp
     # k=1,2,..., kmax -> nbk = kmax
@@ -287,7 +308,7 @@ function psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_b
 
     ######### Compute M_pp' #########
     for iJp=1:nbJ 
-        J' = Jmax/nbJ * (iJp-1)
+        Jp = Jmax/nbJ * (iJp-1)
         Omegap = _Omega(Jp)
         xap = _xa_from_J(Jp)
         Ep = _E_from_xa(xap)

@@ -24,7 +24,7 @@ function _xa_from_E(E::Float64)
 
 end
 
-function _J(xa::Float64, nbu::Float64=100)
+function _J(xa::Float64, nbu::Int64=100)
 
     sum = 0.0
     E = _E_from_xa(xa)
@@ -44,7 +44,7 @@ function _J(xa::Float64, nbu::Float64=100)
 
 end
 
-function _Omega(xa::Float64, nbu::Float64=100)
+function _Omega(xa::Float64, nbu::Int64=100)
 
     sum = 0.0
     E = _E_from_xa(xa)
@@ -60,7 +60,7 @@ function _Omega(xa::Float64, nbu::Float64=100)
     sum *= 2*xa/pi 
     sum *= 1/nbu 
 
-    return sum 
+    return 1/sum 
 
 end
 
@@ -78,7 +78,7 @@ end
 # dJ/dxa = psi'(xa) > 0
 # We use simply use a bisection
 # J=0 <=> xa=0 <=> E=psi(0)
-function _xa_from_J(J::Float64, nbu::Float64=100, eps::Float64=10^(-5), maxIter::Int64=50)
+function _xa_from_J(J::Float64, nbu::Int64=100, eps::Float64=10^(-5), maxIter::Int64=50)
 
     if (J == 0)
         return 0.0

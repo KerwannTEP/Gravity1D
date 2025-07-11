@@ -4,6 +4,12 @@ function _rho(x::Float64)
 
 end
 
+function _psi(x::Float64)
+
+    return G*M*alpha*sqrt(1 + (x/alpha)^2)
+
+end
+
 function _dpsidx(x::Float64)
 
     return G*M*(x/alpha)/sqrt(1+(x/alpha)^2)
@@ -13,6 +19,8 @@ end
 function _dpsidx(x::Float64)
 
     return G*M*alpha/sqrt(1+(x/alpha)^2)
+
+end
 
 function _F(E::Float64)
 
