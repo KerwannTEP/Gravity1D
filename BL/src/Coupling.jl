@@ -13,9 +13,11 @@ end
 function initialize_CouplingArrays(nbK::Int64=100)
 
     var = CouplingArrays(zeros(Float64, nbK), 
-                        zeros(Float64, nbK, kmax),
+                        # zeros(Float64, nbK, kmax),
+                        zeros(Float64, nbK),
                         zeros(Float64, nbK), 
-                        zeros(Float64, nbK, kmax),
+                        # zeros(Float64, nbK, kmax),
+                        zeros(Float64, nbK),
                         zeros(Int64, nbK+2))
 
     return var 
@@ -23,7 +25,8 @@ function initialize_CouplingArrays(nbK::Int64=100)
 end
 
 
-function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
+# function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
+function compute_CouplingArrays!(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
 
     # Put these arrays in a structure?
 
@@ -47,8 +50,12 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
     # Step 1
     # Use DL at r=ra
     dfdu = _dfdu(u)
-    dthetadu = Omega * sqrt(6*xa/(_dpsidx(xa)))
-    dthetapdup = Omegap * sqrt(6*xap/(_dpsidx(xap)))
+    d2fdu2 = _d2fdu2(u)
+    # dthetadu = Omega * sqrt(6*xa/(_dpsidx(xa))) # Is this accurate ???
+    # dthetapdup = Omegap * sqrt(6*xap/(_dpsidx(xap)))
+
+    dthetadu = Omega * xa * _d2psidx2(xa) / sqrt(xa * _dpsidx(xa) * d2fdu2)
+    dthetapdup = Omegap * xap * _d2psidx2(xap) / sqrt(xap * _dpsidx(xap) * d2fdu2)
 
     k_1 = (du*0.5)*dthetadu
     kp_1 = (du*0.5)*dthetapdup
@@ -58,8 +65,8 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
     dfdu = _dfdu(u)
     x = xa * _f(u)
     xp = xap * _f(u)
-    dthetadu = Omega*xa*dfdu/sqrt(2*abs(_psi(x)-E))
-    dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(_psi(xp)-Ep))
+    dthetadu = Omega*xa*dfdu/sqrt(2*abs(E-_psi(x)))
+    dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(Ep-_psi(xp)))
 
     k_2 = (du*0.5)*dthetadu
     kp_2 = (du*0.5)*dthetapdup
@@ -73,8 +80,8 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
     dfdu = _dfdu(u)
     x = xa * _f(u)
     xp = xap * _f(u)
-    dthetadu = Omega*xa*dfdu/sqrt(2*abs(_psi(x)-E))
-    dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(_psi(xp)-Ep))
+    dthetadu = Omega*xa*dfdu/sqrt(2*abs(E-_psi(x)))
+    dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(Ep-_psi(xp)))
 
     k_4 = (du*0.5)*dthetadu
     kp_4 = (du*0.5)*dthetapdup
@@ -85,11 +92,12 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
   
     tabx[1] = x
     tabxp[1] = xp
-    for k=1:kmax
-        tabg[1,k] = cos(k*theta) * dthetadu
-        tabgp[1,k] = cos(k*thetap) * dthetapdup
-    end
-
+    # for k=1:kmax
+    #     tabg[1,k] = cos(k*theta) * dthetadu
+    #     tabgp[1,k] = cos(k*thetap) * dthetapdup
+    # end
+    tabg[1] = cos(k*theta) * dthetadu
+    tabgp[1] = cos(kp*thetap) * dthetapdup
 
     # Other bins of the RK4 scheme have length du, on [-1+du/2, 1-du/2]
 
@@ -99,22 +107,22 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
         dfdu = _dfdu(u)
         x = xa * _f(u)
         xp = xap * _f(u)
-        dthetadu = Omega*xa*dfdu/sqrt(2*abs(_psi(x)-E))
-        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(_psi(xp)-Ep))
+        dthetadu = Omega*xa*dfdu/sqrt(2*abs(E-_psi(x)))
+        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(Ep-_psi(xp)))
 
-        k_1 = (du*0.5)*dthetadu
-        kp_1 = (du*0.5)*dthetapdup
+        k_1 = (du)*dthetadu
+        kp_1 = (du)*dthetapdup
 
         # Step 2
         u += 0.5 * du
         dfdu = _dfdu(u)
         x = xa * _f(u)
         xp = xap * _f(u)
-        dthetadu = Omega*xa*dfdu/sqrt(2*abs(_psi(x)-E))
-        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(_psi(xp)-Ep))
+        dthetadu = Omega*xa*dfdu/sqrt(2*abs(E-_psi(x)))
+        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(Ep-_psi(xp)))
 
-        k_2 = (du*0.5)*dthetadu
-        kp_2 = (du*0.5)*dthetapdup
+        k_2 = (du)*dthetadu
+        kp_2 = (du)*dthetapdup
 
         # Step 3
         k_3 = k_2 
@@ -125,11 +133,11 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
         dfdu = _dfdu(u)
         x = xa * _f(u)
         xp = xap * _f(u)
-        dthetadu = Omega*xa*dfdu/sqrt(2*abs(_psi(x)-E))
-        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(_psi(xp)-Ep))
+        dthetadu = Omega*xa*dfdu/sqrt(2*abs(E-_psi(x)))
+        dthetapdup = Omegap*xap*dfdu/sqrt(2*abs(Ep-_psi(xp)))
 
-        k_4 = (du*0.5)*dthetadu
-        kp_4 = (du*0.5)*dthetapdup
+        k_4 = (du)*dthetadu
+        kp_4 = (du)*dthetapdup
 
         # Update
         theta += (k_1 + 2.0*k_2 + 2.0*k_3 + k_4)/(6.0)
@@ -138,10 +146,12 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays,
         tabx[i] = x
         tabxp[i] = xp
 
-        for k=1:kmax
-            tabg[i,k] = cos(k*theta) * dthetadu
-            tabgp[i,k] = cos(k*thetap) * dthetapdup
-        end
+        # for k=1:kmax
+        #     tabg[i,k] = cos(k*theta) * dthetadu
+        #     tabgp[i,k] = cos(k*thetap) * dthetapdup
+        # end
+        tabg[i] = cos(k*theta) * dthetadu
+        tabgp[i] = cos(kp*thetap) * dthetapdup
 
     end
 
@@ -167,10 +177,13 @@ end
 # Compute all (k, kp) at once
 function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100)
 
+
+    compute_CouplingArrays!(xa, xap, k, kp, var)
+
     # compute_CouplingArrays!(xa, xap, var, nbK, nbu)
 
-    tabP = zeros(Float64, nbK, kmax)
-    tabQ = zeros(Float64, nbK, kmax)
+    tabP = zeros(Float64, nbK)
+    tabQ = zeros(Float64, nbK)
 
     tabx = var.tabx
     tabxp = var.tabxp
@@ -190,7 +203,8 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
     xj = tabxp[1]
     for i=1:tabw[2]
         xi = tabx[i]
-        gi = tabg[i,k]
+        # gi = tabg[i,k]
+        gi = tabg[i]
         deltaP0 += gi
         deltaP1 += gi*xi
     end
@@ -207,7 +221,8 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
         # Compute terms j+1
         for i=tabw[j+1]+1:tabw[j+2]
             xi = tabx[i]
-            gi = tabg[i,k]
+            # gi = tabg[i,k]
+            gi = tabg[i]
             deltaP0 += gi
             deltaP1 += gi*xi
         end
@@ -228,7 +243,8 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
     xj = tabxp[nbK]
     for i=tabw[nbK+1]+1:nbK
         xi = tabx[i]
-        gi = tabg[i,k]
+        # gi = tabg[i,k]
+        gi = tabg[i]
         deltaQ0 += gi
         deltaQ1 += gi*xi
     end
@@ -245,7 +261,8 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
         # Compute terms j-1
         for i=tabw[j]+1:tabw[j+1]
             xi = tabx[i]
-            gi = tabg[i,k]
+            # gi = tabg[i,k]
+            gi = tabg[i]
             deltaQ0 += gi
             deltaQ1 += gi*xi
         end
@@ -259,7 +276,8 @@ function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::Coupl
 
     psikkp = 0.0
     for j=1:nbK 
-        gj = tabgp[j,kp]
+        # gj = tabgp[j,kp]
+        gj = tabgp[j]
         psikkp += gj * (tabP[j] + tabQ[j])
     end
 
@@ -273,10 +291,12 @@ function _psikkp_bare_naive(xa::Float64, xap::Float64, k::Int64, kp::Int64, var:
 
     sum = 0.0
     for i=1:nbK 
-        gi = var.tabg[i,k]
+        # gi = var.tabg[i,k]
+        gi = var.tabg[i]
         xi = var.tabx[i]
         for j=1:nbK 
-            gj = var.tabgp[j,kp]
+            # gj = var.tabgp[j,kp]
+            gj = var.tabgp[j]
             xj = var.tabxp[j]
             sum += gi*gj*abs(xi-xj)
         end

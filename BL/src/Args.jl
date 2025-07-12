@@ -11,3 +11,7 @@ const nbJ = max(100, floor(Int64, Jmax/(0.2*eps_im)))
 const dJ = Jmax/nbJ
 
 const nbp = kmax*nbJ
+
+
+const Npart = 10^4
+const mass = M/Npart

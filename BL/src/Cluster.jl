@@ -16,9 +16,9 @@ function _dpsidx(x::Float64)
 
 end
 
-function _dpsidx(x::Float64)
+function _d2psidx2(x::Float64)
 
-    return G*M*alpha/sqrt(1+(x/alpha)^2)
+    return G*M*alpha/((alpha^2+x^2)*sqrt(1+(x/alpha)^2))
 
 end
 
