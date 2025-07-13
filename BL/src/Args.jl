@@ -7,7 +7,7 @@ const kmax = 10
 const Jmax = 5.0
 
 const eps_im = 0.01
-const nbJ = max(100, floor(Int64, Jmax/(0.2*eps_im)))
+const nbJ = max(100, floor(Int64, Jmax/(0.5*eps_im)))
 const dJ = Jmax/nbJ
 
 const nbp = kmax*nbJ

@@ -1,3 +1,12 @@
+###########################################################################
+# Bare coupling coefficients
+###########################################################################
+
+using LinearAlgebra
+using Plots
+using Plots.PlotMeasures
+using LaTeXStrings
+
 struct CouplingArrays
 
     tabx::Array{Float64}
@@ -25,7 +34,6 @@ function initialize_CouplingArrays(nbK::Int64=100)
 end
 
 
-# function compute_CouplingArrays!(xa::Float64, xap::Float64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
 function compute_CouplingArrays!(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100, nbu::Int64=100)
 
     # Put these arrays in a structure?
@@ -173,10 +181,12 @@ function compute_CouplingArrays!(xa::Float64, xap::Float64, k::Int64, kp::Int64,
 
 end
 
-# Always apply compute_CouplingArrays!(xa, xap, var, nbK, nbu) beforehand
 # Compute all (k, kp) at once
 function _psikkp_bare(xa::Float64, xap::Float64, k::Int64, kp::Int64, var::CouplingArrays, nbK::Int64=100)
 
+    if (mod(k-kp,2)==1)
+        return 0.0
+    end
 
     compute_CouplingArrays!(xa, xap, k, kp, var)
 
@@ -306,16 +316,26 @@ function _psikkp_bare_naive(xa::Float64, xap::Float64, k::Int64, kp::Int64, var:
     return sum
 end
 
+###########################################################################
+# Dressed coupling coefficients
+# A, B, N have the same "swiss cheese" structure
+# <=> N A = B <=> N a_p = b_p
+# We are interested in only one p=(k,J) (sample the D_EE on the J-bins)
+# For a given equation N a_p = b_p, we can reduce the matrix/vector sizes by removing half the lines and columns
+# depending on the location of the 0 sub-matrices
+# This should speed up dramatically the calculation of a_p (column vector with fixed (k,J) and varying (k',J'))
+# Then, given the k' of interest, we can deduce the value of the dressed coupling coefficient by interpolation between two values of J'
+#
+# B is independent of omega and can be precomputed in advance
+# D(omega) is a diagonal matrix, hence is very fast to compute on the fly
+###########################################################################
 
-# Compute psikkp_bare on a grid of (k,k',j,j') = (p, p')
+function compute_tab_psikpp_bare(nbK::Int64=100)
+    # Compute psikkp_bare on a grid of (k,k',j,j') = (p, p')
+    # 0 <= J,Jp <= Jmax 
+    # nbJ elements
 
-# Compute psi_{kk'}^{\rd}(J,J',omega=k*Omega(J)+I*eps_im)
-# We precalculated the bare coupling coefficients beforehand
-# TODO: Replace J by s with s=atan(J) to compacity the space?
-
-function _psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_bare::Array{Float64}, eps_mat::Float64=10^(-5), maxIter::Int64=100)
-
-    # Feed as argument tabpsi_bare as a (p, p') matrix of size nbp*nbp
+    # tabpsi_bare as a (p, p') matrix of size nbp*nbp
     # k=1,2,..., kmax -> nbk = kmax
     # nbp = nbk*nbJ = kmax * nbJ -> Matrix is not too large
 
@@ -323,80 +343,193 @@ function _psikkp_dressed(xa::Float64, xap::Float64, k::Int64, kp::Int64, tabpsi_
     # k = div(p-1,nbJ) + 1
     # iJ = p - (k-1)*nbJ
 
-    omega = k*_Omega(xa) + 1im*eps_im
-    tabM = zeros(ComplexF64, nbp, nbp)
+    var = initialize_CouplingArrays(nbK)
 
-    ######### Compute M_pp' #########
-    for iJp=1:nbJ 
-        Jp = Jmax/nbJ * (iJp-1)
-        Omegap = _Omega(Jp)
-        xap = _xa_from_J(Jp)
-        Ep = _E_from_xa(xap)
-        dFpdJp = Omegap * _dFdE(Ep)
-        for ikp=1:kmax
-            pp = (ikp-1)*nbJ + iJp
+    tab_psi_bare = zeros(Float64, nbp, nbp) # Symmetric
 
-            Threads.@threads for p=1:nbp
+    for p=1:nbp 
+        k = div(p-1,nbJ) + 1
+        iJ = p - (k-1)*nbJ
+        J = dJ * (iJ-0.5)
+        xa = _xa_from_J(J)
 
-                psibare = tabpsi_bare[p,pp]
-                M_p_pp = 2*pi*kp*dJ * dFpdJp/(kp*Omegap-omega) * tabpsi_bare[p,pp]
-                tabM[p,pp] = M_p_pp
+        println("p = ", p, "/", nbp)
+
+        Threads.@threads for pp=1:p
+            kp = div(pp-1,nbJ) + 1
+            iJp = pp - (kp-1)*nbJ
+            Jp = dJ * (iJp-0.5)
+            xap = _xa_from_J(Jp)
+
+            if (mod(k-kp,2)==0)
+                compute_CouplingArrays!(xa, xap, k, kp, var)
+                psikkp = _psikkp_bare(xa, xap, k, kp, var)
+                tab_psi_bare[p,pp] = psikkp
             end
+
         end
     end
 
-    ######### Compute tabpsi by fixed-point interation #########
+    for p=1:nbp 
+       
+        println("p = ", p, "/", nbp)
 
-    # tabpsi = tabpsi_bare + tabM*tabpsi
-    # Initialization
-    tabpsi = tabpsi_bare
-
-    # Recursion
-    iter = 0
-    while (iter < maxIter)
-
-        # Compute next iteration 
-        tabpsi_next = tabpsi_bare + tabM * tabpsi
-
-        # Evaluate stopping condition
-        if (maximum(abs.(tabpsi_next-tabpsi)) < eps_mat)
-            break
-        end
-
-    end
-
-    ######### Return the desired value by interpolation #########
-
-    # We have the array psi_{kk'}^{d}(J,J')
-    # We want the value for a specific pair (k,k'), at a given (J,J')
-
-    # First, we recover an array at fixed k, kp
-
-    tabpsi_eval = zeros(Float64, nbJ, nbJ)
-    for iJ=1:nbJ 
-        p = (k-1)*nbJ + iJ
-        for iJp=1:nbJ 
-            pp = (kp-1)*nbJ + iJp
-            tabpsi_eval[iJ, iJp] = tabpsi[p, pp]
+        Threads.@threads for pp=p+1:nbp 
+            tab_psi_bare[p,pp] = tab_psi_bare[pp,p]
         end
     end
+
+    return tab_psi_bare
+
+end
+
+function compute_tab_kernel_psi_diag(omega::ComplexF64)
+
+    tab_kernel = zeros(ComplexF64, nbp)
+
+    Threads.@threads for p=1:nbp
+        k = div(p-1,nbJ) + 1
+        iJ = p - (k-1)*nbJ
+        J = dJ * (iJ-0.5)
+        xa = _xa_from_J(J)
+        E = _E_from_xa(xa)
+        Omega = _Omega(xa)
+        dNtotdJ = Omega * _dFdE(E)
+
+        tab_kernel[p] = 2*pi*k*dJ/(k*Omega-omega) * dNtotdJ
+    end
+
+    return tab_kernel
+
+end
+
+# Use compute_tab_psikpp_bare(nbK::Int64=100) beforehand
+function _psikkp_dressed(xa::Float64, xap::Float64, omega::ComplexF64, k::Int64, kp::Int64, tab_psikpp_bare::Array{Float64})
+
+    J = _J(xa)
+    Jp = _J(xap)
+    # omega = k*_Omega(xa) + 1im * eps_im
+
+    B = tab_psikpp_bare
+    D = Diagonal(compute_tab_kernel_psi_diag(omega))
+    N = I-B*D
+
+    # display(N)
+
+    # println("a0")
+    # tab_psikpp_dressed = matN \ tab_psikpp_bare
+
+    iJpl = floor(Int64, Jp/dJ) + 1
+    iJpr = iJpl + 1
+
+    # p = (k-1)*nbJ + iJ
+    ppl = (kp-1)*nbJ + iJpl
+    ppr = (kp-1)*nbJ + iJpr
+
+    # k-Size of reduced matrices
+    nbk = mod(kp, 2)==0 ? floor(Int64, kmax/2) : ceil(Int64, kmax/2)
+
+    ta = zeros(Float64, nbk*nbJ, 2)
+    tb = zeros(Float64, nbk*nbJ, 2)
+    tN = zeros(ComplexF64, nbk*nbJ, nbk*nbJ)
+
+    # println("a1")
+
+    # Fill tb 
+    index_p = 1
+    for p=1:nbp
+        index_k = div(p-1,nbJ) + 1
+        index_iJ = p - (index_k-1)*nbJ
+        if (mod(index_k - kp, 2)==0)
+            tb[index_p, 1] = B[p, ppl]
+            tb[index_p, 2] = B[p, ppr]
+            index_p += 1
+        end
+    end
+
+    # display(tb)
+
+    # println("a2")
+    # Fill tN
+    index_p = 1
+    for p=1:nbp
+        index_k = div(p-1,nbJ) + 1
+        index_iJ = p - (index_k-1)*nbJ
+        index_pp = 1
+        if (mod(index_k - kp, 2)==0)
+            for pp=1:nbp
+                index_kp = div(pp-1,nbJ) + 1
+                index_iJp = pp - (index_kp-1)*nbJ
+                if (mod(index_kp - kp, 2)==0)
+                    tN[index_p, index_pp] = N[p, pp]
+                    index_pp += 1
+                end
+            end
+            index_p += 1
+        end
+    end
+
+    # display(tN)
+
+    # println("a3")
+
+    ta = tN \ tb # (nbk*nbJ, 2) matrix
+
+    # display(ta)
+
+    # println("a4")
 
     # Bilinear interpolation
+    # https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
 
-    # TODO 
+    iJl = floor(Int64, J/dJ) + 1
+    iJr = iJl + 1
 
-    psi = 0.0
+    # kp odd
+    # k=2p-1
+    # ind_k = 1,3,5,...,2ind_p-1: ind_p=1,2,...
+    # p = (k+1)/2 
+    # k/2 = p-1/2 -> p =ceil(k/2)
 
-    #########
+    # kp even 
+    # k=2p : p=1,2,3,..
+    # p=k/2 -> p = ceil(k/2)
 
-    # We also have M = B * Diag
-    # Then A = (I-M)\B # about one second ? Is ok?
+    index_pl = (ceil(Int64, k/2)-1)*nbJ + iJl # Check this ?
+    index_pr = iJl + 1
 
-    # Ex:
-    # B = Symmetric(randn(n, n))         # symmetric matrix
-    # D = Diagonal(randn(n))             # diagonal matrix    
+    psidkkp_Jl_Jpl = ta[index_pl, 1] # BL
+    psidkkp_Jl_Jpr = ta[index_pl, 2] # BR
+    psidkkp_Jr_Jpl = ta[index_pr, 1] # TL
+    psidkkp_Jr_Jpr = ta[index_pr, 2] # TR
 
+    # println("a5")
+    
+    Jl = (iJl-0.5) * dJ
+    Jr = (iJr-0.5) * dJ
+    Jpl = (iJpl-0.5) * dJ
+    Jpr = (iJpr-0.5) * dJ
 
+    # y = J
+    # x = Jp
 
-    return psi 
+    psidkkp_B = (Jpr-Jp)/dJ * psidkkp_Jl_Jpl + (Jp-Jpl)/dJ * psidkkp_Jl_Jpr
+    psidkkp_T = (Jpr-Jp)/dJ * psidkkp_Jr_Jpl + (Jp-Jpl)/dJ * psidkkp_Jr_Jpr
+
+    psidkkp = (Jr-J)/dJ * psidkkp_B + (J-Jl)/dJ * psidkkp_T
+    
+
+    # p = heatmap(log10.(abs2.(tab_psikpp_dressed)), 
+    #         c=:viridis, frame=:box, 
+    #         title=L" |\psi^{\mathrm{d}}_{kk\prime}(J,J\prime, k \Omega+\mathrm{i} \epsilon) |^2", 
+    #         xlabel=L"p=(k,J)", ylabel=L"p{\prime}=(k\prime, J\prime)", 
+    #         colorbar_title="\n Log amplitude", 
+    #         right_margin=5mm)
+
+    # display(p)
+    # readline()
+
+    return psidkkp
+
 end
+

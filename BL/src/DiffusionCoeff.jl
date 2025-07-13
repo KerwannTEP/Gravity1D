@@ -42,15 +42,18 @@ function find_resonance_xap(xa::Float64, k::Int64, kp::Int64)
 
 end
 
+###########################################################################
+# Landau coefficients
+###########################################################################
 
-function _DJJ_xa(xa::Float64)
+function _DJJ_Landau_xa(xa::Float64)
 
     DJJ = 0.0
     var = initialize_CouplingArrays()
     count=0
     for k=1:kmax
         for kp=1:kmax 
-            if ((k-kp)%2==0)
+            if (mod(k-kp,2)==0)
                 if (has_resonance(xa, k, kp))
                     # println((k,kp))
                     count+=1
@@ -61,7 +64,7 @@ function _DJJ_xa(xa::Float64)
                     Ep = _psi(xap)
                     Ftot = mass * _F(Ep)
 
-                    DJJ += k^2/kp * abs(psikkp)^2/abs(dOmegadJ) * Ftot
+                    DJJ += k^2/kp * abs2(psikkp)/abs(dOmegadJ) * Ftot
 
                 end
 
@@ -75,23 +78,23 @@ function _DJJ_xa(xa::Float64)
 
 end
 
-function _DEE_xa(xa::Float64)
+function _DEE_Landau_xa(xa::Float64)
 
-    DJJ = _DJJ_xa(xa)
+    DJJ = _DJJ_Landau_xa(xa)
     Omega = _Omega(xa)
 
     return Omega^2 * DJJ 
 
 end
 
-function plot_DEE_E()
+function plot_DEE_Landau_E()
 
     tabx=range(0.01, 4.0, length=200)
     tabE = _E_from_xa.(tabx)
-    tabD = _DEE_xa.(tabx)  .* Npart
+    tabD = _DEE_Landau_xa.(tabx)  .* Npart
 
     p = plot(tabE, tabD, 
-            xlabel=L"E", ylabel=L"N \times D_{EE}"*" [Laudau]",
+            xlabel=L"E", ylabel=L"N \times D_{EE}"*" [Landau]",
             title="Plummer cluster",
             xlims=(0.5,3), ylims=(0,1.5), 
             xticks=0:1:3, xminorticks=4, 
@@ -100,4 +103,50 @@ function plot_DEE_E()
 
     display(p)
     readline()
+end
+
+###########################################################################
+# Balescu-Lenard coefficients
+###########################################################################
+
+function _DJJ_BL_xa(xa::Float64, tab_psikpp_bare::Array{Float64})
+
+    DJJ = 0.0
+    var = initialize_CouplingArrays()
+    count=0
+    for k=1:kmax
+        omega = k*_Omega(xa) + 1.0im * eps_im
+        for kp=1:kmax 
+            if (mod(k-kp,2)==0)
+                if (has_resonance(xa, k, kp))
+                    # println((k,kp))
+                    count+=1
+                    xap = find_resonance_xap(xa, k, kp)
+                    dOmegadJ = _dOmegadJ(xap)
+                    
+                    psikkp = _psikkp_bare(xa, xap, omega, k, kp, tab_psikpp_bar)
+                    Ep = _psi(xap)
+                    Ftot = mass * _F(Ep)
+
+                    DJJ += k^2/kp * abs2(psikkp)/abs(dOmegadJ) * Ftot
+
+                end
+
+            end
+        end
+    end
+    # println("count=", count)
+
+    DJJ *= 8*pi^2
+    return DJJ
+
+end
+
+function _DEE_BL_xa(xa::Float64)
+
+    DJJ = _DJJ_BL_xa(xa)
+    Omega = _Omega(xa)
+
+    return Omega^2 * DJJ 
+
 end
