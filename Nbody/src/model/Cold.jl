@@ -20,9 +20,13 @@ function initialize_cold_cluster()
                     zeros(Double64, N),
                     zeros(Double64, N))
 
-    println("Generating positions...")
+    if (VERBOSE)
+        println("Generating positions...")
+    end
     for i=1:N 
-        println("Progress : ", i, "/", N)
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
         x = -L + 2*L/N * (i-0.5)
         cluster.tabx[i] = Double64(x)
         cluster.tabt[i] = D64_0
@@ -46,12 +50,16 @@ function initialize_cold_cluster()
 
     end
 
-    println("Generating velocities...")
+    if (VERBOSE)
+        println("Generating velocities...")
+    end
 
     # Fills velocities
     for i=1:N
         x = cluster.tabx[i]
-        println("Progress : ", i, "/", N)
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
         v = velocity_cold(x)
         cluster.tabv[i] = Double64(v)
 

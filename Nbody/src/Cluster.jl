@@ -49,9 +49,13 @@ function initialize_cluster(model::Model)
     # Generate positions
     # Fills indices, positions and time
 
-    println("Generating positions...")
+    if (VERBOSE)
+        println("Generating positions...")
+    end
     for i=1:N 
-        println("Progress : ", i, "/", N)
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
         u = Double64(rand()) # Better generator later ?
         x = model._invCDF(u)
         cluster.tabx[i] = Double64(x)
@@ -78,12 +82,16 @@ function initialize_cluster(model::Model)
 
     end
 
-    println("Generating velocities...")
+    if (VERBOSE)
+        println("Generating velocities...")
+    end
 
     # Fills velocities
     for i=1:N
         x = cluster.tabx[i]
-        println("Progress : ", i, "/", N)
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
         z = Double64(rand())
         v = model._invCDFv(z, x)
         cluster.tabv[i] = Double64(v)

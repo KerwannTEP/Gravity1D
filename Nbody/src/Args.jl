@@ -56,6 +56,10 @@ tabargs = ArgParseSettings()
     help = "Save final state for restart. Default: false"
     arg_type = Bool
     default = false
+    "--verbose"
+    help = "Verbosity. Default: false"
+    arg_type = Bool
+    default = false
     "--restart"
     help = "Name of the state file to use for the restart. Write nothing if the run is not a restart. Default: ''"
     arg_type = String
@@ -82,6 +86,7 @@ const tdyn = sqrt(L*M/G)
 const tmax = Double64(parsed_args["tmax"]) * tdyn
 
 const SAVE_FINAL_STATE = parsed_args["save_final_state"]
+const VERBOSE = parsed_args["verbose"]
 const restart_file = parsed_args["restart"]
 
 const IS_RESTART = length(restart_file) > 0 ? true : false

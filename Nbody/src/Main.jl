@@ -38,7 +38,9 @@ function main()
         return nothing
     end
 
-    println("Initialization...")
+    if (VERBOSE)
+        println("Initialization...")
+    end
 
     mkpath(src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/")
     Random.seed!(seed)
@@ -67,7 +69,9 @@ function main()
         push!(heap, tc, i)
     end
 
-    println("Relaxation...")
+    if (VERBOSE)
+        println("Relaxation...")
+    end
     timing_start = now()
 
     # Main loop
@@ -173,7 +177,9 @@ function main()
 
     end
 
-    println("Finalization...")
+    if (VERBOSE)
+        println("Finalization...")
+    end
 
     # Evolve the particles to final time, given by time
     # No other collisions until time by construction
