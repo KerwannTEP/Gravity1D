@@ -1,2 +1,5 @@
 Nbody/data/*
 .DS_Store
+Nbody/post_processing/figures/
+Nbody/post_processing/data/
+Nbody/post_processing/old/
