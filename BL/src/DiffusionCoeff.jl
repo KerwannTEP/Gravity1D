@@ -119,17 +119,19 @@ function _DJJ_BL_xa(xa::Float64, tab_psikpp_bare::Array{Float64})
         for kp=1:kmax 
             if (mod(k-kp,2)==0)
                 if (has_resonance(xa, k, kp))
-                    # println((k,kp))
-                    count+=1
+                    println((k,kp))
+                    # count+=1
                     xap = find_resonance_xap(xa, k, kp)
-                    dOmegadJ = _dOmegadJ(xap)
-                    
-                    psikkp = _psikkp_bare(xa, xap, omega, k, kp, tab_psikpp_bar)
-                    Ep = _psi(xap)
-                    Ftot = mass * _F(Ep)
+                    Jp = _J(xap)
+                    if (Jp <= Jmax)
+                        dOmegadJ = _dOmegadJ(xap)
+                        
+                        psikkp = _psikkp_dressed(xa, xap, omega, k, kp, tab_psikpp_bare)
+                        Ep = _psi(xap)
+                        Ftot = mass * _F(Ep)
 
-                    DJJ += k^2/kp * abs2(psikkp)/abs(dOmegadJ) * Ftot
-
+                        DJJ += k^2/kp * abs2(psikkp)/abs(dOmegadJ) * Ftot
+                    end
                 end
 
             end
@@ -142,9 +144,9 @@ function _DJJ_BL_xa(xa::Float64, tab_psikpp_bare::Array{Float64})
 
 end
 
-function _DEE_BL_xa(xa::Float64)
+function _DEE_BL_xa(xa::Float64, tab_psikpp_bare::Array{Float64})
 
-    DJJ = _DJJ_BL_xa(xa)
+    DJJ = _DJJ_BL_xa(xa, tab_psikpp_bare)
     Omega = _Omega(xa)
 
     return Omega^2 * DJJ 

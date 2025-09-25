@@ -1,7 +1,7 @@
 #!/bin/bash
 
 N=1000
-TMAX=1000
+TMAX=2000
 SAVE_FREQ=1
 
 SEED_INIT=0
