@@ -22,9 +22,18 @@ function save_intermediate_data(time::Double64, cluster::Cluster)
         data[i, 5] = fi0.hi
     end
    
+    # # Save data as "output_t_time.txt"
+    # namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
+    # writedlm(namefile, data)
+
     # Save data as "output_t_time.txt"
-    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
-    writedlm(namefile, data)
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".hf5"
+    
+    h5open(namefile, "w") do file
+        write(file, "data", data)
+        write(file, "time", time.hi)
+        write(file, "N", N)
+    end
 
     return nothing
 
@@ -51,9 +60,18 @@ function save_data(time::Double64, cluster::Cluster)
 
     end
 
+    # # Save tabstars as "output_t_time.txt"
+    # namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
+    # writedlm(namefile, data)
+
     # Save tabstars as "output_t_time.txt"
-    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
-    writedlm(namefile, data)
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".hf5"
+    
+    h5open(namefile, "w") do file
+        write(file, "data", data)
+        write(file, "time", time.hi)
+        write(file, "N", N)
+    end
 
     return nothing
 

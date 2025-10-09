@@ -1,5 +1,6 @@
 import Pkg; Pkg.add("ArgParse")
 import Pkg; Pkg.add("DelimitedFiles")
+import Pkg; Pkg.add("HDF5")
 import Pkg; Pkg.add("Dates")
 import Pkg; Pkg.add("Random")
 import Pkg; Pkg.add("DoubleFloats")
