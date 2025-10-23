@@ -5,10 +5,11 @@ using DoubleFloats
 using JLD2
 using Random
 using HDF5
+using Printf
 
 
-include("Constants.jl")
 include("Args.jl")
+include("Constants.jl")
 include("Tools.jl")
 
 include("model/Plummer.jl")
@@ -60,8 +61,16 @@ function main()
         time_since_last_tdyn = time % (tdyn_per_save * tdyn)
     end
 
+    # Create output file
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
+    if (!IS_RESTART && isfile(namefile))
+        rm(namefile)
+    end
+    file = h5open(namefile, isfile(namefile) ? "r+" : "w")
+
+
     # Save initial snapshot
-    save_data(time, cluster)
+    save_data(time, cluster, file)
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
@@ -89,7 +98,7 @@ function main()
                 time_next_save = time_last_save + tdyn_per_save * tdyn # Potential time of next tdyn-save
 
                 while (time_next_save < tc) # While there are tdyn-save until next collision, save every tdyn-save
-                    save_intermediate_data(time_next_save, cluster)
+                    save_intermediate_data(time_next_save, cluster, file)
                     time_last_save = time_next_save # Update time of last tdyn-save
                     time_next_save = time_last_save + tdyn_per_save * tdyn # Update potential time of next tdyn-save
                     time_since_last_tdyn = D64_0
@@ -119,6 +128,8 @@ function main()
             mj0 = cluster.tabm[i+1]
             indexj0 = cluster.tabindex[i+1]
 
+            # Reset time so that we don't end up with ridiculously high time
+            # Or use an auxiliary time
             dti = tc - ti0
             dtj = tc - tj0
 
@@ -201,7 +212,7 @@ function main()
     timing_end = now()
 
     # Save the final snapshot at time=tmax
-    save_data(tmax, cluster)
+    save_data(tmax, cluster, file)
 
     # https://stackoverflow.com/questions/41293747/round-julias-millisecond-type-to-nearest-second-or-minute
     dtim = timing_end - timing_start
@@ -217,6 +228,9 @@ function main()
     dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
     println("Simulation took      : ", dt_v)
     println("Number of collisions : ", nbcoll)
+
+    # Close snapshot file
+    close(file)
 
     return nothing
 

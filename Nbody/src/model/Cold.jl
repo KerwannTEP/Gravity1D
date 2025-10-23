@@ -1,11 +1,10 @@
 
 # Function v(x) for the cold initial condition 
 # To be modified depending on which profile the user is interested in
-function velocity_cold(x::Double64)
+function velocity_cold(x::Float64)
 
-    V0 = Double64(0.001) * sqrt(G*M*L)
-    # return -V0 * sin(x/L * D64_pi * D64_half)
-    return -V0 * sin(x/L * D64_pi * D64_half)^3
+    V0 = 0.001 * sqrt(G*M*L)
+    return -V0 * sin(x/L * pi * 0.5)^3
 
 end
 
@@ -13,12 +12,12 @@ end
 function initialize_cold_cluster()
 
     cluster = Cluster(zeros(Int64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N))
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N))
 
     if (VERBOSE)
         println("Generating positions...")
@@ -28,7 +27,7 @@ function initialize_cold_cluster()
             println("Progress : ", i, "/", N)
         end
         x = -L + 2*L/N * (i-0.5)
-        cluster.tabx[i] = Double64(x)
+        cluster.tabx[i] = PREC_FLOAT(x)
         cluster.tabt[i] = D64_0
     end
 
@@ -56,12 +55,12 @@ function initialize_cold_cluster()
 
     # Fills velocities
     for i=1:N
-        x = cluster.tabx[i]
+        x = Float64(cluster.tabx[i])
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
         v = velocity_cold(x)
-        cluster.tabv[i] = Double64(v)
+        cluster.tabv[i] = PREC_FLOAT(v)
 
     end
 

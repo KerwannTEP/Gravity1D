@@ -1,4 +1,4 @@
-function save_intermediate_data(time::Double64, cluster::Cluster)
+function save_intermediate_data(time::Double64, cluster::Cluster, file::HDF5.File)
 
     data = zeros(Float64, N, 5)
 
@@ -16,30 +16,26 @@ function save_intermediate_data(time::Double64, cluster::Cluster)
         v = muladd(fi0, dt, vi0)
 
         data[i, 1] = index0
-        data[i, 2] = x.hi
-        data[i, 3] = v.hi
-        data[i, 4] = mi0.hi
-        data[i, 5] = fi0.hi
+        data[i, 2] = Float64(x)
+        data[i, 3] = Float64(v)
+        data[i, 4] = Float64(mi0)
+        data[i, 5] = Float64(fi0)
     end
    
-    # # Save data as "output_t_time.txt"
-    # namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
-    # writedlm(namefile, data)
+    # Create group
+    grpname = @sprintf("snapshot_t_%.3f", Float64(time))
+    grp = create_group(file, grpname)
 
-    # Save data as "output_t_time.txt"
-    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".hf5"
-    
-    h5open(namefile, "w") do file
-        write(file, "data", data)
-        write(file, "time", time.hi)
-        write(file, "N", N)
-    end
+    # Create datasets
+    write(grp, "data", data)
+    write(grp, "time", Float64(time))
+    write(grp, "N", N)
 
     return nothing
 
 end
 
-function save_data(time::Double64, cluster::Cluster)
+function save_data(time::Double64, cluster::Cluster, file::HDF5.File)
 
     data = zeros(Float64, N, 5)
 
@@ -53,25 +49,21 @@ function save_data(time::Double64, cluster::Cluster)
         m = cluster.tabm[i]
 
         data[i, 1] = index
-        data[i, 2] = x.hi
-        data[i, 3] = v.hi
-        data[i, 4] = m.hi
-        data[i, 5] = f.hi
+        data[i, 2] = Float64(x)
+        data[i, 3] = Float64(v)
+        data[i, 4] = Float64(m)
+        data[i, 5] = Float64(f)
 
     end
 
-    # # Save tabstars as "output_t_time.txt"
-    # namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".txt"
-    # writedlm(namefile, data)
+    # Create group
+    grpname = @sprintf("snapshot_t_%.3f", Float64(time))
+    grp = create_group(file, grpname)
 
-    # Save tabstars as "output_t_time.txt"
-    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_"*string(time.hi)*".hf5"
-    
-    h5open(namefile, "w") do file
-        write(file, "data", data)
-        write(file, "time", time.hi)
-        write(file, "N", N)
-    end
+    # Create datasets
+    write(grp, "data", data)
+    write(grp, "time", Float64(time))
+    write(grp, "N", N)
 
     return nothing
 
@@ -90,8 +82,13 @@ function save_final_state(time::Double64, nbcoll::Int64, cluster::Cluster)
     tabf_comp = cluster.tabf_comp
     tabm = cluster.tabm 
      
-
     mkpath(src_dir*"/../data/restart/")
     @save src_dir*"/../data/restart/restart_data_"*output_name*"_seed_"*string(seed)*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
 
 end
+
+
+# Read data
+
+# file = h5open(filename, "r")
+# keys(file) # keys

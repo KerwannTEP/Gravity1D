@@ -39,12 +39,12 @@ end
 function initialize_cluster(model::Model) 
 
     cluster = Cluster(zeros(Int64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N))
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N))
 
     # Generate positions
     # Fills indices, positions and time
@@ -56,9 +56,9 @@ function initialize_cluster(model::Model)
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
-        u = Double64(rand()) # Better generator later ?
+        u = rand()
         x = model._invCDF(u)
-        cluster.tabx[i] = Double64(x)
+        cluster.tabx[i] = PREC_FLOAT(x)
         cluster.tabt[i] = D64_0
     end
 
@@ -88,13 +88,13 @@ function initialize_cluster(model::Model)
 
     # Fills velocities
     for i=1:N
-        x = cluster.tabx[i]
+        x = Float64(cluster.tabx[i])
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
-        z = Double64(rand())
+        z = rand()
         v = model._invCDFv(z, x)
-        cluster.tabv[i] = Double64(v)
+        cluster.tabv[i] = PREC_FLOAT(v)
 
     end
 

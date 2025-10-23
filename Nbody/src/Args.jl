@@ -72,24 +72,19 @@ const N = parsed_args["N"]
 const tdyn_per_save = Double64(parsed_args["save_freq"])
 const base = parsed_args["base"]
 
-const G = Double64(parsed_args["G"])
-const M = Double64(parsed_args["M"])
-const L = Double64(parsed_args["L"])
+const G_float = parsed_args["G"]
+const M_float = parsed_args["M"]
+const L_float = parsed_args["L"]
 
 const seed = parsed_args["seed"]
 const output_name = parsed_args["output"]
 
 const model_type = parsed_args["model"]
-const alpha = D64_2*L/D64_pi
+const tmax_float = parsed_args["tmax"]
 
-const tdyn = sqrt(L*M/G)
-const tmax = Double64(parsed_args["tmax"]) * tdyn
 
 const SAVE_FINAL_STATE = parsed_args["save_final_state"]
 const VERBOSE = parsed_args["verbose"]
 const restart_file = parsed_args["restart"]
 
 const IS_RESTART = length(restart_file) > 0 ? true : false
-
-
-const m_avg = M/N # Average mass
