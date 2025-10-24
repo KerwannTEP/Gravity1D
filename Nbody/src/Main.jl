@@ -61,6 +61,9 @@ function main()
         time_since_last_tdyn = time % (tdyn_per_save * tdyn)
     end
 
+    # Compute energy at the start
+    energy_start, vir_start = compute_energy(cluster, time)
+
     # Create output file
     namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
     if (!IS_RESTART && isfile(namefile))
@@ -69,8 +72,10 @@ function main()
     file = h5open(namefile, isfile(namefile) ? "r+" : "w")
 
 
-    # Save initial snapshot
-    save_data(time, cluster, file)
+    if (!IS_RESTART)
+        # Save initial snapshot
+        save_data(time, cluster, energy_start, file)
+    end
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
@@ -98,7 +103,7 @@ function main()
                 time_next_save = time_last_save + tdyn_per_save * tdyn # Potential time of next tdyn-save
 
                 while (time_next_save < tc) # While there are tdyn-save until next collision, save every tdyn-save
-                    save_intermediate_data(time_next_save, cluster, file)
+                    save_intermediate_data(time_next_save, cluster, energy_start, file)
                     time_last_save = time_next_save # Update time of last tdyn-save
                     time_next_save = time_last_save + tdyn_per_save * tdyn # Update potential time of next tdyn-save
                     time_since_last_tdyn = D64_0
@@ -209,10 +214,13 @@ function main()
         cluster.tabt[i] = tmax
     end
 
+    # Compute energy at the end
+    energy_end, vir_end = compute_energy(cluster, tmax)
+
     timing_end = now()
 
     # Save the final snapshot at time=tmax
-    save_data(tmax, cluster, file)
+    save_data(tmax, cluster, energy_start, file)
 
     # https://stackoverflow.com/questions/41293747/round-julias-millisecond-type-to-nearest-second-or-minute
     dtim = timing_end - timing_start
@@ -226,8 +234,13 @@ function main()
 
     # https://discourse.julialang.org/t/how-to-convert-period-in-milisecond-to-minutes-seconds-hour-etc/2423/6
     dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
-    println("Simulation took      : ", dt_v)
-    println("Number of collisions : ", nbcoll)
+    println("Simulation took       : ", dt_v)
+    println("Number of collisions  : ", nbcoll)
+    println("Energy at the start   : ", Float64(energy_start))
+    println("Energy at the end     : ", Float64(energy_end))
+    println("V. rat. at the start  : ", Float64(vir_start))
+    println("V. rat. at the end    : ", Float64(vir_end))
+    println("Relative energy error : ", Float64(D64_1 - energy_end/energy_start))
 
     # Close snapshot file
     close(file)
