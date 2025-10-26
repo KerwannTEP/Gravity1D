@@ -155,7 +155,7 @@ end
 # Save the exact bit state of the data at final time for exact bit-to-bit restart
 # Very efficient binary format: Should we use this in the final product ?
 # It can only be read with Julia however
-function save_final_state(time::PREC_FLOAT, nbcoll::Int64, cluster::Cluster)
+function save_final_state(time::PREC_FLOAT, nbcoll::Int64, cluster::Cluster, energy_start::PREC_FLOAT, Ptot_start::PREC_FLOAT, vir_start::PREC_FLOAT)
 
     tabindex = cluster.tabindex
     tabt = cluster.tabt
@@ -166,7 +166,7 @@ function save_final_state(time::PREC_FLOAT, nbcoll::Int64, cluster::Cluster)
     tabm = cluster.tabm 
      
     mkpath(src_dir*"/../data/restart/")
-    @save src_dir*"/../data/restart/restart_data_"*output_name*"_seed_"*string(seed)*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
+    @save src_dir*"/../data/restart/restart_data_"*output_name*"_seed_"*string(seed)*".jld2" time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt energy_start Ptot_start vir_start
 
     return nothing
 end

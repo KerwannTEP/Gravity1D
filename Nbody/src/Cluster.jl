@@ -109,11 +109,11 @@ end
 # Load the exact bit state of the data at final time of a previous run for exact bit-to-bit restart
 function load_restart_data()
 
-    @load src_dir*"/../data/restart/"*restart_file time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
+    @load src_dir*"/../data/restart/"*restart_file time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt energy_start Ptot_start vir_start
 
     cluster = Cluster(tabindex, tabx, tabv, tabm, tabf,
                     tabf_comp, tabt)
 
-    return cluster, time, nbcoll
+    return cluster, time, nbcoll, energy_start, Ptot_start, vir_start
 
 end

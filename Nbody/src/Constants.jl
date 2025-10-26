@@ -1,7 +1,9 @@
 # Type used for the high-precision float arithmetic
 const PREC_FLOAT = Double64
 
-println("Precision of the float arithmetic : ", PREC_FLOAT)
+if (VERBOSE)
+    println("Precision of the float arithmetic : ", PREC_FLOAT)
+end
 
 
 # Numerical values

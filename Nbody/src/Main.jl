@@ -47,6 +47,10 @@ function main()
     mkpath(src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/")
     Random.seed!(seed)
 
+    energy_start = D64_0
+    Ptot_start = D64_0
+    vir_start = D64_0
+
     if (!IS_RESTART) # Not a restart
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
@@ -57,12 +61,16 @@ function main()
         time_since_last_tdyn = D64_0
         nbcoll = 0
     else # Restart
-        cluster, time, nbcoll = load_restart_data()
+        cluster, time, nbcoll, energy_start, Ptot_start, vir_start = load_restart_data()
         time_since_last_tdyn = time % (tdyn_per_save * tdyn)
     end
 
-    # Compute energy at the start
-    energy_start, Ptot_start, vir_start = compute_E_Ptot_vir(cluster, time)
+    
+    if (!IS_RESTART)
+        # Compute energy at the start
+        # For a restart, use the saved value fro before
+        energy_start, Ptot_start, vir_start = compute_E_Ptot_vir(cluster, time)
+    end
 
     # Create output file
     namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
@@ -226,23 +234,25 @@ function main()
     dtim = timing_end - timing_start
 
     # Save the exact bit-to-bit final state (for restart purposes)
+    # Save energy_start, Ptot_start !!
     if (SAVE_FINAL_STATE)
-        save_final_state(tmax, nbcoll, cluster)
+        save_final_state(tmax, nbcoll, cluster, energy_start, Ptot_start, vir_start)
     end
 
     println("-----------------------")
 
     # https://discourse.julialang.org/t/how-to-convert-period-in-milisecond-to-minutes-seconds-hour-etc/2423/6
     dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
-    println("Simulation took       : ", dt_v)
-    println("Number of collisions  : ", nbcoll)
-    println("Energy at the start   : ", Float64(energy_start))
-    println("Energy at the end     : ", Float64(energy_end))
-    println("Momentum at the start : ", Float64(Ptot_start))
-    println("Momentum at the end   : ", Float64(Ptot_end))
-    println("V. rat. at the start  : ", Float64(vir_start))
-    println("V. rat. at the end    : ", Float64(vir_end))
-    println("Relative energy error : ", Float64(D64_1 - energy_end/energy_start))
+    println("Simulation took         : ", dt_v)
+    println("Number of collisions    : ", nbcoll)
+    println("Energy at the start     : ", Float64(energy_start))
+    println("Energy at the end       : ", Float64(energy_end))
+    println("Momentum at the start   : ", Float64(Ptot_start))
+    println("Momentum at the end     : ", Float64(Ptot_end))
+    println("V. rat. at the start    : ", Float64(vir_start))
+    println("V. rat. at the end      : ", Float64(vir_end))
+    println("Relative energy error   : ", Float64(D64_1 - energy_end/energy_start))
+    println("Absolute momentum error : ", Float64(Ptot_end - Ptot_start))
 
     # Close snapshot file
     close(file)
