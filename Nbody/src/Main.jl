@@ -14,6 +14,7 @@ include("Tools.jl")
 
 include("model/Plummer.jl")
 include("model/Harmonic.jl")
+include("model/Anharmonic.jl")
 include("model/Cold.jl")
 include("Cluster.jl")
 
@@ -35,6 +36,8 @@ function main()
         model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
     elseif (model_type == "cold")
         # Do nothing
+    elseif (split(model_type, "_")[1] == "anharmonic")
+        # Do nothing
     else
         println("ERROR: Model '" * model_type * "' is unavailable.")
         return nothing
@@ -54,9 +57,19 @@ function main()
     if (!IS_RESTART) # Not a restart
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
+        elseif (split(model_type, "_")[1] == "anharmonic")
+            eps = parse(Float64, split(model_type, "_")[2])
+            a = 3/2 * L_float
+            cluster = initialize_anharmonic_cluster(eps, a)
         else
             cluster = initialize_cluster(model)
         end
+
+        # if (model_type == "cold")
+        #     cluster = initialize_cold_cluster()
+        # elseif
+        #     cluster = initialize_cluster(model)
+        # end
         time = D64_0
         time_since_last_tdyn = D64_0
         nbcoll = 0

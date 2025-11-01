@@ -3,8 +3,8 @@
 # To be modified depending on which profile the user is interested in
 function velocity_cold(x::Float64)
 
-    V0 = 0.001 * sqrt(G*M*L)
-    return -V0 * sin(x/L * pi * 0.5)^3
+    V0 = 0.001 * sqrt(G_float*M_float*L_float)
+    return -V0 * sin(x/L_float * pi * 0.5)^3
 
 end
 
@@ -26,7 +26,7 @@ function initialize_cold_cluster()
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
-        x = -L + 2*L/N * (i-0.5)
+        x = -L_float + 2*L_float/N * (i-0.5)
         cluster.tabx[i] = PREC_FLOAT(x)
         cluster.tabt[i] = D64_0
     end
