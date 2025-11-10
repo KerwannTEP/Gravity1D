@@ -31,7 +31,6 @@ const G = parsed_args["G"]
 
 function plot_data()
 
-    # modify for h5 file
     namefile = "../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
     file = h5open(namefile)
     keys_snapshots = keys(file)
@@ -88,15 +87,18 @@ function plot_data()
     listXb = listXb[p]
     listVb = listVb[p]
 
+    close(file)
+
     s = 2.0
 
     plt = plot(listt[2:end], 
             [abs.(listdE[2:end])  1e-29.*sqrt.(listt[2:end])  1e-30.*listt[2:end]], 
             yaxis=:log10, xaxis=:log10, 
-            labels=["Data" L"\sqrt{t}" L"t"], 
-            legends=:topleft, 
+            label=["Data" L"\sqrt{t}" L"t"], 
+            legend=:topleft, 
             frame=:box, 
             xticks=10.0.^(0:1:6), 
+            yticks=10.0.^(-40:1:20), 
             xminorticks=10, 
             yminorticks=10, 
             xlabel=L"t/t_{\mathrm{dyn}}", 
@@ -105,12 +107,14 @@ function plot_data()
     display(plt)
     readline()
 
-    plt = plot(listt[2:end], abs.(listdPtot[2:end]), 
+    plt = plot(listt[2:end], 
+            [abs.(listdPtot[2:end])  1e-30.*sqrt.(listt[2:end])  1e-32.*listt[2:end]], 
             yaxis=:log10, xaxis=:log10, 
-            labels=false, 
-            # legends=:topleft, 
+            label=["Data" L"\sqrt{t}" L"t"], 
+            legend=:topleft, 
             frame=:box, 
             xticks=10.0.^(0:1:6), 
+            yticks=10.0.^(-40:1:20), 
             xminorticks=10, 
             yminorticks=10, 
             xlabel=L"t/t_{\mathrm{dyn}}", 
@@ -136,7 +140,7 @@ function plot_data()
 
     plt = plot(listt[1:nbt] , listXb[1:nbt], 
             # yaxis=:log10, 
-            labels=false, 
+            label=false, 
             frame=:box, 
             right_margin=6mm,
             xlims=(0, listt[end]),
@@ -150,7 +154,7 @@ function plot_data()
 
     plt = plot(listt[1:nbt] , listVb[1:nbt], 
             # yaxis=:log10, 
-            labels=false, 
+            label=false, 
             frame=:box, 
             right_margin=6mm,
             xlims=(0, listt[end]),

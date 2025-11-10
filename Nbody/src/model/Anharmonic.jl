@@ -83,7 +83,7 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
     # Generate positions
     xmin = 0.0
     xmax = a*(1+eps)
-    tabxa = range(xmin, xmax, length=nbx)
+    tabxa = [xmin + (xmax-xmin)/nbx*(i-0.5) for i=1:nbx] #range(xmin, xmax, length=nbx)
     tabdf = _F_anharmonic.(tabxa, Ref(eps), Ref(a), Ref(nbx))
 
     maxF = maximum(tabdf) * 1.1
