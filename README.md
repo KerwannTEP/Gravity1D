@@ -5,6 +5,8 @@ Exact N-body integrator for 1D gravity.
 
 This repository aims to compute the exact evolution of a one-dimensional self-gravitating system of N particles. It is a heap-based, event-driven algorithm which computes the collision times of each particles, as described by [Noullez & al. (2001)](https://ui.adsabs.harvard.edu/abs/2001cond.mat..1336N/abstract). Following the observations of [Schulz & al. (2013)](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract), we use a 106-bit mantissa (via the `DoubleFloats.jl` package) to suppress the accumulation of roundoff errors during long simulations.
 
+We provide the user with the possibility of using another high-precision float type in the file `src/Constants.jl`, where the user can modify the variable `PREC_FLOAT` with the type of his choice (provided the appropriate libraries have been loaded.)
+
 ## Installation
 
 Install Julia by following the instructions at [https://julialang.org/downloads/platform/](https://julialang.org/downloads/platform/).
@@ -85,7 +87,7 @@ We refer to the file `Args.jl` for a list of the arguments of the code. As an il
 $ julia Main.jl --N 100 --tmax 100.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true
 ```
 
-runs a simulation of 100 particles, randomly sampled from a Plummer distribution with random seed 0, until `t=100` time units. It saves a snapshot every 10 time units using the name `output_` in a `data/` folder created for this purpose. Finally, it saves the exact final state of the system at `t=100` in a `restart_data_output_seed_0.jld2` binary file in a `data/restart/` folder. In that case, the run may be restarted from that exact final state via the command
+runs a simulation of 100 particles, randomly sampled from a Plummer distribution with random seed 0, until `t=100` (in units of dynamical time). It saves a snapshot every 10 time units using the name `output_` in a `../data/` folder created for this purpose. Finally, it saves the exact final state of the system at `t=100` in a `restart_data_output_seed_0.jld2` binary file in a `../data/restart/` folder. In that case, the run may be restarted from that exact final state via the command
 
 ```
 $ julia Main.jl --N 100 --tmax 200.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true --restart restart_data_output_seed_0.jld2
@@ -97,7 +99,12 @@ The models that can be used as initial conditions are:
 
 - `plummer` : A one-dimensional analog to the Plummer model (see [Roule & Fouvry, 2022](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract)),
 - `harmonic` : The one-dimensional harmonic system,
+- `anharmonic` : The one-dimensional anharmonic system. For example, one should write `anharmonic_0.1` for the anharmonic system with parameter $\eps=0.1$.
 - `cold` : A one-dimensional, cold, homogeneous system (see [Schulz & al., 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract)).
+
+We refer to [Tep & al. (in prep)](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract) for details.
+
+We also provide bash scripts in the folder `script` to launch and restart a run, as described in this section.
 
 
 ## Post-treatment
@@ -110,5 +117,5 @@ We provide a series of Julia scripts to treat the data saved during the simulati
 We provide a bash script using SLURM to launch a job array on a computing cluster in the folder `slurm`. It may be used via the command
 
 ```
-$ sbatch job_run.sh
+$ sbatch job_array.sh
 ```

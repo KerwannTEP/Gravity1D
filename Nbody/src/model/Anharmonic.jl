@@ -65,7 +65,7 @@ function xa_from_E(E::Float64, eps::Float64, a::Float64)
     end
 end
 
-
+# For eps<1
 function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
 
     cluster = Cluster(zeros(Int64, N),
@@ -142,23 +142,108 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
             println("Progress : ", i, "/", N)
         end
 
-        # println("tyupe of x :")
-
         vmax = sqrt(2*abs(Psimax - _psi_anharmonic(x, eps, a)))
-
-        # println((Psimax , _psi_anharmonic(x, eps, a)))
         while (true)
             v = (2*rand()-1) * vmax 
             u = rand()
 
-            
-
             E = _psi_anharmonic(x, eps, a) + v^2/2
-
-            # println((x, eps, a, v, E))
-
             xa = xa_from_E(E, eps, a)
             F = _F_anharmonic(xa, eps, a, nbx)
+
+            if (u <= F/maxF)
+                cluster.tabv[i] = PREC_FLOAT(v)
+                break 
+            end
+
+        end
+
+    end
+
+    return cluster
+
+end
+
+# Sampling a fully anharmonic potential
+function initialize_anharmonic_1_cluster(a::Float64, nbx::Int64=500)
+
+    cluster = Cluster(zeros(Int64, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N))
+
+    if (VERBOSE)
+        println("Generating positions...")
+    end
+
+    # Generate positions
+
+    maxrho = M_float/(2*a)
+    Psimax = 2*G_float*M_float*a
+    xmax = 2*a
+
+    for i=1:N 
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
+
+        while (true)
+            x = (2*rand()-1) * xmax 
+            u = rand()
+
+            if (u <= _rho_anharmonic(x, 1.0, a)/maxrho)
+                cluster.tabx[i] = PREC_FLOAT(x)
+                cluster.tabt[i] = D64_0
+                break 
+            end
+
+        end
+
+    end
+
+    cluster.tabx = sort(cluster.tabx)
+
+    mass_left = D64_0
+    mass_right = M
+
+    # Fills masses and forces
+    for i=1:N 
+        m = M/N
+
+        cluster.tabindex[i] = i
+        cluster.tabm[i] = m 
+
+        mass_right -= m
+        force = G*(mass_right - mass_left)
+        mass_left += m
+
+        cluster.tabf[i] = force
+
+    end
+    
+    if (VERBOSE)
+        println("Generating velocities...")
+    end
+
+    # Fills velocities
+    for i=1:N
+        x = Float64(cluster.tabx[i])
+        maxF = _F_anharmonic(abs(x), 1.0, a)
+        if (VERBOSE)
+            println("Progress : ", i, "/", N)
+        end
+
+        vmax = sqrt(2*abs(Psimax - _psi_anharmonic(x, 1.0, a)))
+        while (true)
+            v = (2*rand()-1) * vmax 
+            u = rand()
+
+            E = _psi_anharmonic(x, 1.0, a) + v^2/2
+            xa = xa_from_E(E, 1.0, a)
+            F = _F_anharmonic(xa, 1.0, a, nbx)
 
             if (u <= F/maxF)
                 cluster.tabv[i] = PREC_FLOAT(v)

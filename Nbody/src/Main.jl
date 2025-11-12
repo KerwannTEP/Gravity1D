@@ -58,18 +58,18 @@ function main()
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
         elseif (split(model_type, "_")[1] == "anharmonic")
-            eps = parse(Float64, split(model_type, "_")[2])
             a = 3/2 * L_float
-            cluster = initialize_anharmonic_cluster(eps, a)
+            eps_string = split(model_type, "_")[2]
+            if (eps_string == "1.0")
+                cluster = initialize_anharmonic_1_cluster(a)
+            else # 0 < eps < 1
+                eps = parse(Float64, eps_string)
+                cluster = initialize_anharmonic_cluster(eps, a)
+            end
         else
             cluster = initialize_cluster(model)
         end
 
-        # if (model_type == "cold")
-        #     cluster = initialize_cold_cluster()
-        # elseif
-        #     cluster = initialize_cluster(model)
-        # end
         time = D64_0
         time_since_last_tdyn = D64_0
         nbcoll = 0

@@ -24,5 +24,5 @@ const M = PREC_FLOAT(M_float)
 const L = PREC_FLOAT(L_float)
 const m_avg = M/N # Average mass
 
-const tdyn = sqrt(L*M/G)
+const tdyn = sqrt(L/(G*M))
 const tmax = PREC_FLOAT(tmax_float) * tdyn
