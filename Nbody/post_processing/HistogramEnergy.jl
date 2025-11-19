@@ -101,8 +101,10 @@ function plot_data()
     println("RMS      energy : ", sqrt(energy_var))
     println("Median   energy : ", median(listE))
 
-    Emin = 1/4 * G * M^2 * L
+    Emin = 1/2 * G * M^2 * L
     Emax =       G * M^2 * L
+    # Emin = 3/4 * G * M^2 * L
+    # Emax = 5/4 * G * M^2 * L
     nbE  = 20
     dE = (Emax-Emin)/nbE
 

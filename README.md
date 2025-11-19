@@ -104,17 +104,17 @@ The models that can be used as initial conditions are:
 
 We refer to [Tep & al. (in prep)](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract) for details.
 
-We also provide bash scripts in the folder `script` to launch and restart a run, as described in this section.
+We also provide bash scripts in the folder `script/` to launch and restart a run, as described in this section.
 
 
 ## Post-treatment
 
-We provide a series of Julia scripts to treat the data saved during the simulation in the `post_treatment` folder.
+We provide a series of Julia scripts to treat the data saved during the simulation in the `post_treatment/` folder.
 
 
 ## Running a job array on a cluster with SLURM
 
-We provide a bash script using SLURM to launch a job array on a computing cluster in the folder `slurm`. It may be used via the command
+We provide a bash script using SLURM to launch a job array on a computing cluster in the folder `slurm/`. It may be used via the command
 
 ```
 $ sbatch job_array.sh

@@ -40,6 +40,10 @@ tabargs = ArgParseSettings()
     help = "Frame per second. Default: 10"
     arg_type = Int64
     default = 10
+    "--KS"
+    help = "KS threshold. Default: 0.025"
+    arg_type = Float64
+    default = 0.020
 end
 parsed_args = parse_args(tabargs)
 
@@ -50,11 +54,13 @@ const G = parsed_args["G"]
 const M = parsed_args["M"]
 const framepersec = parsed_args["framepersec"]
 
+const KS_val = parsed_args["KS"]
 
 ##################################################
 # Fast helper to construct file paths
 ##################################################
 h5path(output_name, seed) = "../data/$(output_name)/seed_$(seed)/$(output_name).h5"
+# h5path(output_name, seed) = "/Volumes/Data_research/gravity1d/$(output_name)/seed_$(seed)/$(output_name).h5"
 
 ##################################################
 # Main function
@@ -135,7 +141,7 @@ function read_data()
 
     kmax = 10 # Cutoff for Kolmogorov formula
 
-    KS_val = 0.025 #0.03
+    # KS_val = 0.025 #0.03
 
     namefile = h5path(output_name, seed_min)
     file = h5open(namefile, "r")
@@ -289,9 +295,9 @@ function read_data()
 
     println("Time KS : ", tm, " (", tl-tm, ", ", tr-tm, ")")
 
-    mkpath("../data/gif/" * output_name * "/avg/")
-    namefile_gif = "../data/gif/" * output_name * "/avg/cumulative_" * output_name * ".gif"
-    gif(anim, namefile_gif, fps = framepersec)
+    # mkpath("../data/gif/" * output_name * "/avg/")
+    # namefile_gif = "../data/gif/" * output_name * "/avg/cumulative_" * output_name * ".gif"
+    # gif(anim, namefile_gif, fps = framepersec)
 
 
     

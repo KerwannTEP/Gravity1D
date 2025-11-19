@@ -15,6 +15,7 @@ include("Tools.jl")
 include("model/Plummer.jl")
 include("model/Harmonic.jl")
 include("model/Anharmonic.jl")
+include("model/CompSmooth.jl")
 include("model/Cold.jl")
 include("Cluster.jl")
 
@@ -57,15 +58,12 @@ function main()
     if (!IS_RESTART) # Not a restart
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
+        elseif (model_type == "CompSmooth")
+            cluster = initialize_CompSmooth_cluster()
         elseif (split(model_type, "_")[1] == "anharmonic")
             a = 3/2 * L_float
-            eps_string = split(model_type, "_")[2]
-            if (eps_string == "1.0")
-                cluster = initialize_anharmonic_1_cluster(a)
-            else # 0 < eps < 1
-                eps = parse(Float64, eps_string)
-                cluster = initialize_anharmonic_cluster(eps, a)
-            end
+            eps = parse(Float64, split(model_type, "_")[2])
+            cluster = initialize_anharmonic_cluster(eps, a)
         else
             cluster = initialize_cluster(model)
         end
