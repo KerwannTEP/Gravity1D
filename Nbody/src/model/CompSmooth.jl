@@ -1,10 +1,37 @@
 ######################################################
 # Useful constants
+# Calculated using Mathematica
+# Precision was increased until 16-digit convergence
 ######################################################
 
-const C_exp = 0.443993816237631
-const inv_C_exp = 2.25228362069076
-const a_over_L_CompSmooth = 2.18592635291586
+# (*C_exp*)
+# prec = 17;
+# Cst = NIntegrate[Exp[-1/(1 - y^2)], {y, -1, 1}, PrecisionGoal -> prec, Method -> "LocalAdaptive"];
+# NumberForm[Cst, 16]
+
+# > 0.4439938161680795
+
+
+# (*1/C_exp*)
+# prec = 17;
+# Cst = 1/NIntegrate[Exp[-1/(1 - y^2)], {y, -1, 1}, PrecisionGoal -> prec, Method -> "LocalAdaptive"];
+# NumberForm[Cst, 16]
+
+# > 2.252283621043581
+
+
+# (*a_over_L_CompSmooth*)
+# prec = 18;
+# exp = NIntegrate[Exp[-1/(1 - y^2)], {y, -1, 1}, PrecisionGoal -> prec, Method -> "LocalAdaptive"]^2
+#    / NIntegrate[Exp[-1/(1 - x^2)] Exp[-1/(1 - y^2)] Abs[x - y], {x, -1, 1}, {y, -1, 1}, PrecisionGoal -> prec, Method -> "LocalAdaptive"];
+# NumberForm[exp, 16]
+
+# > 2.185926325236906
+
+
+const C_exp = 0.4439938161680795
+const inv_C_exp = 2.252283621043581
+const a_over_L_CompSmooth = 2.185926325236906
 
 ######################################################
 # Functions
@@ -42,7 +69,7 @@ function _psi_CompSmooth(x::Float64, nby::Int64=100)
     end
 end
 
-function _F_CompSmooth(x::Float64, nbx::Int64=100, nby::Int64=100)
+function _F_CompSmooth(xa::Float64, nbx::Int64=100, nby::Int64=100)
 
     a = a_over_L_CompSmooth * L_float
 
@@ -84,6 +111,8 @@ end
 
 function initialize_CompSmooth_cluster(nbx::Int64=100, nby::Int64=100)
 
+    a = a_over_L_CompSmooth * L_float
+    
     cluster = Cluster(zeros(Int64, N),
                     zeros(PREC_FLOAT, N),
                     zeros(PREC_FLOAT, N),

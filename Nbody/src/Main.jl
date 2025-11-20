@@ -35,6 +35,8 @@ function main()
         model = Model(_rho_plummer, _psi_plummer, _invCDF_plummer, _invCDFv_plummer)
     elseif (model_type == "harmonic")
         model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
+    elseif (model_type == "comp_smooth")
+        # Do nothing
     elseif (model_type == "cold")
         # Do nothing
     elseif (split(model_type, "_")[1] == "anharmonic")
@@ -58,7 +60,7 @@ function main()
     if (!IS_RESTART) # Not a restart
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
-        elseif (model_type == "CompSmooth")
+        elseif (model_type == "comp_smooth")
             cluster = initialize_CompSmooth_cluster()
         elseif (split(model_type, "_")[1] == "anharmonic")
             a = 3/2 * L_float
