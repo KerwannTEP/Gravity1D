@@ -18,6 +18,27 @@ module load julia/1.11.3
 export JULIA_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
+export JULIA_PRECOMPILE_THREADS=1
+
+# Path to your Julia environment
+JULIA_ENV="/path/to/LocalEnv"
+
+# --- Conditional precompilation ---
+# Only precompile if not done already (creates a marker file)
+PRECOMPILE_MARKER="${JULIA_ENV}/.precompiled_ok"
+if [ ! -f "$PRECOMPILE_MARKER" ]; then
+    echo "Precompiling packages for the first time..."
+    julia --project="$JULIA_ENV" -e '
+    using Pkg
+    Pkg.instantiate()
+    Pkg.precompile()
+    '
+    # Create marker file so other jobs skip precompilation
+    touch "$PRECOMPILE_MARKER"
+else
+    echo "Precompiled packages already exist. Skipping precompilation."
+fi
+
 
 # Simulation parameters
 N=1000
