@@ -4,6 +4,7 @@ using DelimitedFiles
 using DoubleFloats
 using JLD2
 using Random
+using LinearAlgebra
 using HDF5
 using Printf
 

@@ -1,5 +1,4 @@
 # Assuming equal-mass system
-# Compute the absolute area between the cumulative distributions instead of the sup
 # Ensemble average
 
 using ArgParse

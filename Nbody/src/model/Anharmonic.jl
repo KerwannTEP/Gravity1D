@@ -110,6 +110,8 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
                     zeros(PREC_FLOAT, N),
                     zeros(PREC_FLOAT, N))
 
+    tabx = zeros(Rational, N)
+
     if (VERBOSE)
         println("Generating positions...")
     end
@@ -138,7 +140,9 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
             u = rand()
 
             if (u <= _rho_anharmonic(x, eps, a)/maxrho)
-                cluster.tabx[i] = PREC_FLOAT(x)
+                # cluster.tabx[i] = PREC_FLOAT(x)
+                tabx[i] = rationalize(x)
+                cluster.tabx[i] = PREC_FLOAT(rationalize(x))
                 cluster.tabt[i] = D64_0
                 break 
             end
@@ -147,6 +151,7 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
 
     end
 
+    tabx = sort(tabx)
     cluster.tabx = sort(cluster.tabx)
 
     mass_left = D64_0
@@ -173,7 +178,8 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
 
     # Fills velocities
     for i=1:N
-        x = Float64(cluster.tabx[i])
+        # x = Float64(cluster.tabx[i])
+        x = Float64(tabx[i])
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
@@ -188,7 +194,7 @@ function initialize_anharmonic_cluster(eps::Float64, a::Float64, nbx::Int64=500)
             F = _F_anharmonic(xa, eps, a, nbx)
 
             if (u <= F/maxF)
-                cluster.tabv[i] = PREC_FLOAT(v)
+                cluster.tabv[i] = PREC_FLOAT(rationalize(v)) # PREC_FLOAT(v)
                 break 
             end
 

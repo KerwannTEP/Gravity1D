@@ -19,6 +19,8 @@ function initialize_cold_cluster()
                     zeros(PREC_FLOAT, N),
                     zeros(PREC_FLOAT, N))
 
+    tabx = zeros(Rational, N)
+
     if (VERBOSE)
         println("Generating positions...")
     end
@@ -27,7 +29,9 @@ function initialize_cold_cluster()
             println("Progress : ", i, "/", N)
         end
         x = -L_float + 2*L_float/N * (i-0.5)
-        cluster.tabx[i] = PREC_FLOAT(x)
+        # cluster.tabx[i] = PREC_FLOAT(x)
+        tabx[i] = rationalize(x)
+        cluster.tabx[i] = PREC_FLOAT(rationalize(x))
         cluster.tabt[i] = D64_0
     end
 
@@ -55,13 +59,15 @@ function initialize_cold_cluster()
 
     # Fills velocities
     for i=1:N
-        x = Float64(cluster.tabx[i])
+        # x = Float64(cluster.tabx[i])
+        x = Float64(tabx[i])
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
         v = velocity_cold(x)
-        cluster.tabv[i] = PREC_FLOAT(v)
-
+        # cluster.tabv[i] = PREC_FLOAT(v)
+        cluster.tabv[i] = PREC_FLOAT(rationalize(v))
+        
     end
 
     return cluster
