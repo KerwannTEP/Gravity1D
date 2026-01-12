@@ -4,15 +4,19 @@ using DelimitedFiles
 using DoubleFloats
 using JLD2
 using Random
+using LinearAlgebra
 using HDF5
+using Printf
 
 
-include("Constants.jl")
 include("Args.jl")
+include("Constants.jl")
 include("Tools.jl")
 
 include("model/Plummer.jl")
 include("model/Harmonic.jl")
+include("model/Anharmonic.jl")
+include("model/CompSmooth.jl")
 include("model/Cold.jl")
 include("Cluster.jl")
 
@@ -32,7 +36,11 @@ function main()
         model = Model(_rho_plummer, _psi_plummer, _invCDF_plummer, _invCDFv_plummer)
     elseif (model_type == "harmonic")
         model = Model(_rho_harmonic, _psi_harmonic, _invCDF_harmonic, _invCDFv_harmonic)
+    elseif (model_type == "comp_smooth")
+        # Do nothing
     elseif (model_type == "cold")
+        # Do nothing
+    elseif (split(model_type, "_")[1] == "anharmonic")
         # Do nothing
     else
         println("ERROR: Model '" * model_type * "' is unavailable.")
@@ -46,22 +54,50 @@ function main()
     mkpath(src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/")
     Random.seed!(seed)
 
+    energy_start = D64_0
+    Ptot_start = D64_0
+    vir_start = D64_0
+
     if (!IS_RESTART) # Not a restart
         if (model_type == "cold")
             cluster = initialize_cold_cluster()
+        elseif (model_type == "comp_smooth")
+            cluster = initialize_CompSmooth_cluster()
+        elseif (split(model_type, "_")[1] == "anharmonic")
+            a = 3/2 * L_float
+            eps = parse(Float64, split(model_type, "_")[2])
+            cluster = initialize_anharmonic_cluster(eps, a)
         else
             cluster = initialize_cluster(model)
         end
+
         time = D64_0
         time_since_last_tdyn = D64_0
         nbcoll = 0
     else # Restart
-        cluster, time, nbcoll = load_restart_data()
+        cluster, time, nbcoll, energy_start, Ptot_start, vir_start = load_restart_data()
         time_since_last_tdyn = time % (tdyn_per_save * tdyn)
     end
 
-    # Save initial snapshot
-    save_data(time, cluster)
+    
+    if (!IS_RESTART)
+        # Compute energy at the start
+        # For a restart, use the saved value fro before
+        energy_start, Ptot_start, vir_start = compute_E_Ptot_vir(cluster, time)
+    end
+
+    # Create output file
+    namefile = src_dir * "/../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
+    if (!IS_RESTART && isfile(namefile))
+        rm(namefile)
+    end
+    file = h5open(namefile, isfile(namefile) ? "r+" : "w")
+
+
+    if (!IS_RESTART)
+        # Save initial snapshot
+        save_data(time, cluster, energy_start, Ptot_start, file)
+    end
 
     # Initialize collision times and heap structure
     heap = MinHeap() # Heap structure containing the collision times and the conversion array Heap->Particles and Particles->Heap
@@ -89,7 +125,7 @@ function main()
                 time_next_save = time_last_save + tdyn_per_save * tdyn # Potential time of next tdyn-save
 
                 while (time_next_save < tc) # While there are tdyn-save until next collision, save every tdyn-save
-                    save_intermediate_data(time_next_save, cluster)
+                    save_intermediate_data(time_next_save, cluster, energy_start, Ptot_start, file)
                     time_last_save = time_next_save # Update time of last tdyn-save
                     time_next_save = time_last_save + tdyn_per_save * tdyn # Update potential time of next tdyn-save
                     time_since_last_tdyn = D64_0
@@ -119,6 +155,8 @@ function main()
             mj0 = cluster.tabm[i+1]
             indexj0 = cluster.tabindex[i+1]
 
+            # Reset time so that we don't end up with ridiculously high time
+            # Or use an auxiliary time
             dti = tc - ti0
             dtj = tc - tj0
 
@@ -198,28 +236,42 @@ function main()
         cluster.tabt[i] = tmax
     end
 
+    # Compute energy at the end
+    energy_end, Ptot_end, vir_end = compute_E_Ptot_vir(cluster, tmax)
+
     timing_end = now()
 
     # Save the final snapshot at time=tmax
-    save_data(tmax, cluster)
+    save_data(tmax, cluster, energy_start, Ptot_start, file)
 
     # https://stackoverflow.com/questions/41293747/round-julias-millisecond-type-to-nearest-second-or-minute
     dtim = timing_end - timing_start
 
     # Save the exact bit-to-bit final state (for restart purposes)
+    # Save energy_start, Ptot_start !!
     if (SAVE_FINAL_STATE)
-        save_final_state(tmax, nbcoll, cluster)
+        save_final_state(tmax, nbcoll, cluster, energy_start, Ptot_start, vir_start)
     end
 
     println("-----------------------")
 
     # https://discourse.julialang.org/t/how-to-convert-period-in-milisecond-to-minutes-seconds-hour-etc/2423/6
     dt_v = Dates.canonicalize(Dates.CompoundPeriod(Dates.Millisecond(dtim)))
-    println("Simulation took      : ", dt_v)
-    println("Number of collisions : ", nbcoll)
+    println("Simulation took         : ", dt_v)
+    println("Number of collisions    : ", nbcoll)
+    println("Energy at the start     : ", Float64(energy_start))
+    println("Energy at the end       : ", Float64(energy_end))
+    println("Momentum at the start   : ", Float64(Ptot_start))
+    println("Momentum at the end     : ", Float64(Ptot_end))
+    println("V. rat. at the start    : ", Float64(vir_start))
+    println("V. rat. at the end      : ", Float64(vir_end))
+    println("Relative energy error   : ", Float64(D64_1 - energy_end/energy_start))
+    println("Absolute momentum error : ", Float64(Ptot_end - Ptot_start))
+
+    # Close snapshot file
+    close(file)
 
     return nothing
-
 end
 
 main()

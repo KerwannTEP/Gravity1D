@@ -1,12 +1,9 @@
-# Test for cold IC first
 # Evolution of (x,v) phase space
 
-using Glob
-using DelimitedFiles
+using HDF5
 using Plots 
 using LaTeXStrings
 using Statistics
-using StatsPlots
 using ArgParse
 
 ##################################################
@@ -36,10 +33,6 @@ tabargs = ArgParseSettings()
     arg_type = Float64
     default = 1.0
 
-    "--model"
-    help = "Model of the initial conditions. Default: 'plummer'"
-    arg_type = String
-    default = "plummer"
     "--framepersec"
     help = "Frame per second. Default: 10"
     arg_type = Int64
@@ -54,31 +47,25 @@ const G = parsed_args["G"]
 const M = parsed_args["M"]
 const L = parsed_args["L"]
 
-const model_type = parsed_args["model"]
 const alpha = 2*L/pi
 
 const framepersec = parsed_args["framepersec"]
 
-# const xmax = 2.0
-# const vmax = 0.005
-
-
 function plot_data()
 
-    listdata = glob("../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_t_*.txt")
-    nbt = length(listdata)
+    namefile = "../data/" * output_name * "/seed_" * string(seed) * "/" * output_name * ".h5"
+    file = h5open(namefile)
+
+    keys_snapshots = keys(file)
+    nbt = length(keys_snapshots)
     listt = zeros(Float64, nbt)
 
     for i=1:nbt 
-        time = split(split(listdata[i],"_")[end],".")
-        time = time[1]*"."*time[2]
-        time = parse(Float64, time)
+        time = read(file[keys_snapshots[i]], "time")
         listt[i] = time 
     end
 
     p = sortperm(listt)
-
-    listdata = listdata[p]
     listt = listt[p]
 
     xmax = 0.0
@@ -86,34 +73,28 @@ function plot_data()
 
     for i=1:nbt 
 
-        data = readdlm(listdata[i])
-        datax = data[:,2]
-        datav = data[:,3]
+        key = keys_snapshots[p[i]]
+        data = read(file[key], "data")
+        datax = @view data[:,2]
+        datav = @view data[:,3]
 
-        maxx = maximum(abs.(datax))
-        maxv = maximum(abs.(datav))
-        
-        if (maxx > xmax)
-            xmax = maxx 
-        end
+        maxx = maximum(abs, datax)
+        maxv = maximum(abs, datav)
 
-        if (maxv > vmax)
-            vmax = maxv 
-        end
+        xmax = max(xmax, maxx)
+        vmax = max(vmax, maxv)
 
     end
-
 
     anim = @animate for i=1:nbt 
 
         println("Progress : ", i, "/", nbt)
 
-        data = readdlm(listdata[i])
-        datax = data[:,2]
-        datav = data[:,3]
-        dataindex = data[:, 1]
-        # meanx = mean(datax)
-        # datax = datax .- meanx
+        key = keys_snapshots[p[i]]
+        data = read(file[key], "data")
+        datax = @view data[:,2]
+        datav = @view data[:,3]
+        dataindex = @view data[:, 1]
 
         time = round(listt[i], digits=1)
 
@@ -132,6 +113,8 @@ function plot_data()
 
     end
 
+    close(file)
+
     mkpath("../data/gif/" * output_name * "/seed_" * string(seed) * "/")
     namefile_gif = "../data/gif/" * output_name * "/seed_" * string(seed) * "/" * output_name * "_phase_space.gif"
     gif(anim, namefile_gif, fps = framepersec)
@@ -139,4 +122,4 @@ function plot_data()
     return nothing
 end
 
-plot_data()
+@time plot_data()

@@ -39,15 +39,17 @@ end
 function initialize_cluster(model::Model) 
 
     cluster = Cluster(zeros(Int64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N),
-                    zeros(Double64, N))
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N),
+                    zeros(PREC_FLOAT, N))
 
     # Generate positions
     # Fills indices, positions and time
+
+    tabx = zeros(Rational, N)
 
     if (VERBOSE)
         println("Generating positions...")
@@ -56,12 +58,15 @@ function initialize_cluster(model::Model)
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
-        u = Double64(rand()) # Better generator later ?
+        u = rand()
         x = model._invCDF(u)
-        cluster.tabx[i] = Double64(x)
+        # cluster.tabx[i] = PREC_FLOAT(x)
+        tabx[i] = rationalize(x)
+        cluster.tabx[i] = PREC_FLOAT(rationalize(x))
         cluster.tabt[i] = D64_0
     end
 
+    tabx = sort(tabx)
     cluster.tabx = sort(cluster.tabx)
 
     mass_left = D64_0
@@ -88,13 +93,16 @@ function initialize_cluster(model::Model)
 
     # Fills velocities
     for i=1:N
-        x = cluster.tabx[i]
+        # x = Float64(cluster.tabx[i])
+        x = Float64(tabx[i])
+        
         if (VERBOSE)
             println("Progress : ", i, "/", N)
         end
-        z = Double64(rand())
+        z = rand()
         v = model._invCDFv(z, x)
-        cluster.tabv[i] = Double64(v)
+        # cluster.tabv[i] = PREC_FLOAT(v)
+        cluster.tabv[i] = PREC_FLOAT(rationalize(v))
 
     end
 
@@ -109,11 +117,11 @@ end
 # Load the exact bit state of the data at final time of a previous run for exact bit-to-bit restart
 function load_restart_data()
 
-    @load src_dir*"/../data/restart/"*restart_file time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt
+    @load src_dir*"/../data/restart/"*restart_file time nbcoll tabindex tabx tabv tabm tabf tabf_comp tabt energy_start Ptot_start vir_start
 
     cluster = Cluster(tabindex, tabx, tabv, tabm, tabf,
                     tabf_comp, tabt)
 
-    return cluster, time, nbcoll
+    return cluster, time, nbcoll, energy_start, Ptot_start, vir_start
 
 end

@@ -18,7 +18,7 @@ end
 # Bisection
 ######################################################
 
-function bisection(fun::Function, xl::Double64, xu::Double64, tolx::Double64=Double64(1.0*10^(-15)), tolf::Double64=Double64(1.0*10^(-15)), iterMAX::Int64=200)
+function bisection(fun::Function, xl::Float64, xu::Float64, tolx::Float64=1.0*10^(-15), tolf::Float64=1.0*10^(-15), iterMAX::Int64=200)
     if (xl > xu)
         xl, xu = xu, xl # Ordering the input arguments
     end
@@ -35,13 +35,13 @@ function bisection(fun::Function, xl::Double64, xu::Double64, tolx::Double64=Dou
     end
 
     #####
-    @assert fl*fu < D64_0 "bisection: NOT A BRACKET : (xl,xu,fl,fu) = "*string((xl,xu,fl,fu))
+    @assert fl*fu < 0.0 "bisection: NOT A BRACKET : (xl,xu,fl,fu) = "*string((xl,xu,fl,fu))
     #####
     iter = 0 # Counter for the iterations
     #####
     while true # Bisection loop
         #####
-        xm = (xl+xu)*D64_half # Middle value
+        xm = (xl+xu)*0.5 # Middle value
         #####
         if ((abs(xu-xl) <= tolx) || (iter > iterMAX)) # The considered bracket is smaller than the tolerance, or we have made too many iterations
             return xm # Returning the middle value
@@ -56,7 +56,7 @@ function bisection(fun::Function, xl::Double64, xu::Double64, tolx::Double64=Dou
         end
         #####
         # Otherwise, we iterate the bisection
-        if (fm*fl < D64_0) # One root can be found between the left point and the middle point
+        if (fm*fl < 0.0) # One root can be found between the left point and the middle point
             xu, fu = xm, fm # The upper point becomes the midpoint
         else
             xl, fl = xm, fm # The lower point becomes the midpoint

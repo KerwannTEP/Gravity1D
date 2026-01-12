@@ -3,3 +3,8 @@ Nbody/data/*
 Nbody/post_processing/figures/
 Nbody/post_processing/data/
 Nbody/post_processing/old/
+Nbody/data_from_infinity/
+Nbody/packages/LocalEnv/
+BL_old/
+Nbody/post_processing/PhaseSpaceHarmonic.jl
+Nbody/slurm/job_run_array_old.sh
