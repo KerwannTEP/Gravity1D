@@ -9,6 +9,10 @@ using HDF5
 using Printf
 
 
+# Type used for the high-precision float arithmetic
+const PREC_FLOAT = Double64
+
+
 include("Args.jl")
 include("Constants.jl")
 include("Tools.jl")
@@ -23,6 +27,11 @@ include("Cluster.jl")
 include("Heap.jl")
 include("CollisionTime.jl")
 include("SaveData.jl")
+
+
+if (VERBOSE)
+    println("Precision of the float arithmetic : ", PREC_FLOAT)
+end
 
 
 # Algorithm inspired by Noullez, Fanelli & Aurell (2003)

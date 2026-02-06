@@ -1,11 +1,3 @@
-# Type used for the high-precision float arithmetic
-const PREC_FLOAT = Double64
-
-if (VERBOSE)
-    println("Precision of the float arithmetic : ", PREC_FLOAT)
-end
-
-
 # Numerical values
 const D64_0 = PREC_FLOAT(0)
 const D64_1 = PREC_FLOAT(1)

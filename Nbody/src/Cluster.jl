@@ -22,12 +22,12 @@ end
 
 mutable struct Cluster
     tabindex::Vector{Int64} # Particle index (at t=0)
-    tabx::Vector{Double64} # Position
-    tabv::Vector{Double64} # Velocity
-    tabm::Vector{Double64} # Mass (in fraction of m_avg)
-    tabf::Vector{Double64} # Force (per unit mass, i.e. the specific force). 
-    tabf_comp::Vector{Double64} # Array used for Kahan summation
-    tabt::Vector{Double64} # Time of last update (initialization, last collision or final time)
+    tabx::Vector{PREC_FLOAT} # Position
+    tabv::Vector{PREC_FLOAT} # Velocity
+    tabm::Vector{PREC_FLOAT} # Mass (in fraction of m_avg)
+    tabf::Vector{PREC_FLOAT} # Force (per unit mass, i.e. the specific force). 
+    tabf_comp::Vector{PREC_FLOAT} # Array used for Kahan summation
+    tabt::Vector{PREC_FLOAT} # Time of last update (initialization, last collision or final time)
 end
 
 

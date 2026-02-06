@@ -2,7 +2,7 @@
 # Kahan summation
 ######################################################
 
-function kahan_add_array!(sum_array::Vector{Double64}, comp_array::Vector{Double64}, idx::Int, x::Double64)
+function kahan_add_array!(sum_array::Vector{PREC_FLOAT}, comp_array::Vector{PREC_FLOAT}, idx::Int, x::PREC_FLOAT)
 
     y = x - comp_array[idx]
     t = sum_array[idx] + y

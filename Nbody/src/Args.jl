@@ -69,7 +69,7 @@ end
 parsed_args = parse_args(tabargs)
 
 const N = parsed_args["N"]
-const tdyn_per_save = Double64(parsed_args["save_freq"])
+const tdyn_per_save = PREC_FLOAT(parsed_args["save_freq"])
 const base = parsed_args["base"]
 
 const G_float = parsed_args["G"]

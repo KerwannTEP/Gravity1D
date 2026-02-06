@@ -1,12 +1,12 @@
 mutable struct MinHeap
-    data::Vector{Double64} # Data
+    data::Vector{PREC_FLOAT} # Data
     index_HP::Vector{Int64} # Particle index at for each heap index
     index_PH::Vector{Int64} # Heap index at for each particle index
 end
 
 # Create an empty heap
 function MinHeap()
-    return MinHeap(Double64[], Int64[], Int64[])
+    return MinHeap(PREC_FLOAT[], Int64[], Int64[])
 end
 
 # Helper functions
@@ -74,7 +74,7 @@ function bubble_down!(heap::MinHeap, i::Int)
 end
 
 # Insert a new value
-function push!(heap::MinHeap, val::Double64, index::Int64)
+function push!(heap::MinHeap, val::PREC_FLOAT, index::Int64)
     Base.push!(heap.data, val)
     Base.push!(heap.index_HP, index)
     Base.push!(heap.index_PH, index)
@@ -107,7 +107,7 @@ function pop!(heap::MinHeap)
 end
 
 # Replace value at known heap index
-function replace!(heap::MinHeap, i::Int, new_val::Double64)
+function replace!(heap::MinHeap, i::Int, new_val::PREC_FLOAT)
     old_val = heap.data[i]
     heap.data[i] = new_val
     if new_val < old_val

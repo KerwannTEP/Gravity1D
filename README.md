@@ -5,7 +5,7 @@ Exact N-body integrator for 1D gravity.
 
 This repository aims to compute the exact evolution of a one-dimensional self-gravitating system of N particles. It is a heap-based, event-driven algorithm which computes the collision times of each particles, as described by [Noullez & al. (2001)](https://ui.adsabs.harvard.edu/abs/2001cond.mat..1336N/abstract). Following the observations of [Schulz & al. (2013)](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract), we use a 106-bit mantissa (via the `DoubleFloats.jl` package) to suppress the accumulation of roundoff errors during long simulations.
 
-We provide the user with the possibility of using another high-precision float type in the file `src/Constants.jl`, where the user can modify the variable `PREC_FLOAT` with the type of his choice (provided the appropriate libraries have been loaded.)
+We provide the user with the possibility of using another high-precision float type in the file `src/Main.jl`, where the user can modify the variable `PREC_FLOAT` with the type of his choice (provided the appropriate libraries have been loaded.)
 
 ## Installation
 
@@ -20,7 +20,7 @@ On MacOS, we may have to create a link in `/usr/local/bin`.
 Open the terminal in the folder `packages` and type
 
 ```
-$ julia Install_pkg.jl
+julia Install_pkg.jl
 ```
 
 to install the necessary packages.
@@ -32,8 +32,8 @@ One may create a local Julia environment by following the instructions at [https
 One can create a local environment called `LocalEnv` by following the next instructions. First, open `Julia` on the console.
 
 ```
-$ module load julia/1.11.3
-$ julia
+module load julia/1.11.3
+julia
 ```
 
 Then, open the Pkg mode and create the local environment
@@ -78,19 +78,19 @@ julia> using Pkg; Pkg.activate()
 One may run a simulation by going to the `src/` folder and running the bash command
 
 ```
-$ julia Main.jl
+julia Main.jl
 ```
 
 We refer to the file `Args.jl` for a list of the arguments of the code. As an illustration, the command
 
 ```
-$ julia Main.jl --N 100 --tmax 100.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true
+julia Main.jl --N 100 --tmax 100.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true
 ```
 
 runs a simulation of 100 particles, randomly sampled from a Plummer distribution with random seed 0, until `t=100` (in units of dynamical time). It saves a snapshot every 10 time units using the name `output_` in a `../data/` folder created for this purpose. Finally, it saves the exact final state of the system at `t=100` in a `restart_data_output_seed_0.jld2` binary file in a `../data/restart/` folder. In that case, the run may be restarted from that exact final state via the command
 
 ```
-$ julia Main.jl --N 100 --tmax 200.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true --restart restart_data_output_seed_0.jld2
+julia Main.jl --N 100 --tmax 200.0 --save_freq 10 --model plummer --seed 0 --output output --save_final_state true --restart restart_data_output_seed_0.jld2
 ```
 
 starting at `t=100` and ending at `t=200`.
@@ -107,9 +107,9 @@ We refer to [Tep & al. (in prep)](https://ui.adsabs.harvard.edu/abs/2022PhRvE.10
 We also provide bash scripts in the folder `script/` to launch and restart a run, as described in this section.
 
 
-## Post-treatment
+## Post-processing
 
-We provide a series of Julia scripts to treat the data saved during the simulation in the `post_treatment/` folder.
+We provide a series of Julia scripts to treat the data saved during the simulation in the `post_processing/` folder.
 
 
 ## Running a job array on a cluster with SLURM
@@ -117,5 +117,5 @@ We provide a series of Julia scripts to treat the data saved during the simulati
 We provide a bash script using SLURM to launch a job array on a computing cluster in the folder `slurm/`. It may be used via the command
 
 ```
-$ sbatch job_array.sh
+sbatch job_array.sh
 ```
