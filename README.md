@@ -99,10 +99,11 @@ The models that can be used as initial conditions are:
 
 - `plummer` : A one-dimensional analog to the Plummer model (see [Roule & Fouvry, 2022](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract)),
 - `harmonic` : The one-dimensional harmonic system,
+- `comp_smooth` : A one-dimensional system with smooth compact support,
 - `anharmonic` : The one-dimensional anharmonic system. For example, one should write `anharmonic_0.1` for the anharmonic system with parameter $\epsilon=0.1$.
 - `cold` : A one-dimensional, cold, homogeneous system (see [Schulz & al., 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.431...49S/abstract)).
 
-We refer to [Tep & al. (in prep)](https://ui.adsabs.harvard.edu/abs/2022PhRvE.106d4118R/abstract) for details.
+We refer to [Tep & al. (2026)](https://ui.adsabs.harvard.edu/abs/2026arXiv260311238T/abstract) for details.
 
 We also provide bash scripts in the folder `script/` to launch and restart a run, as described in this section.
 
